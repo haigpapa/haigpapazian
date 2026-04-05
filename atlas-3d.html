@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — Haig Papazian</title>
+<meta name="description" content="Constellation of 65+ works across sound, space, code, text, image, and systems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="data.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050508;--ink:#ddd5c2;--ink-2:#5e5a55;--ink-3:#2e2c29;
+  --gold:#b8966a;--gold-lt:#d4b08a;--line:#181714;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Space Grotesk',system-ui,sans-serif;
+  --sound:#b8966a;--text-c:#5b8a7a;--image:#9a6b8a;
+  --code:#4a8a9a;--space:#7a9a4a;--systems:#7a5a9a;
+}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;cursor:none;font-family:var(--sans);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+
+/* CURSOR */
+#cursor{
+  position:fixed;top:0;left:0;width:8px;height:8px;
+  background:var(--ink);border-radius:50%;pointer-events:none;
+  z-index:9999;transform:translate(-50%,-50%);opacity:.5;
+  transition:width .2s,height .2s,background .2s,border .2s,opacity .2s;
+  mix-blend-mode:difference;
+}
+#cursor.hover{width:38px;height:38px;background:transparent;border:1px solid var(--gold);opacity:1}
+
+/* ── PAGE TRANSITION ─────────────────────── */
+#page-transition {
+  position:fixed;inset:0;background:var(--bg);z-index:99999;pointer-events:none;transform:translateY(100%);
+}
+#page-transition::after {
+  content:'';position:absolute;inset:0;background:var(--gold);transform:translateY(100%);
+}
+
+/* CANVAS */
+#webgl-canvas{position:fixed;inset:0;display:block}
+
+/* ── ONBOARDING ─────────────────── */
+#onboarding{
+  position:fixed;inset:0;z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);
+}
+#onboarding::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 50%, rgba(184,150,106,.04) 0%, transparent 70%);
+  pointer-events:none;
+}
+.ob-eyebrow{font-family:var(--sans);font-size:.48rem;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2rem}
+.ob-title{font-family:var(--serif);font-size:clamp(3rem,7vw,6rem);font-weight:300;letter-spacing:.02em;color:var(--ink);line-height:1;margin-bottom:1.2rem;text-align:center}
+.ob-sub{font-family:var(--serif);font-style:italic;font-size:clamp(1rem,1.8vw,1.3rem);color:var(--ink-2);margin-bottom:3.5rem;text-align:center;max-width:480px;line-height:1.6}
+.ob-stats{display:flex;gap:4rem;margin-bottom:4rem}
+.ob-stat{text-align:center}
+.ob-stat-n{font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--gold);display:block;line-height:1}
+.ob-stat-l{font-family:var(--sans);font-size:.45rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);margin-top:.3rem;display:block}
+.ob-domains{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;margin-bottom:4rem}
+.ob-domain-pill{
+  font-family:var(--sans);font-size:.45rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:.35rem .9rem;border:1px solid;border-radius:100px;opacity:.6;
+  transition:opacity .2s;
+}
+.ob-cta{
+  font-family:var(--sans);font-size:.58rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--ink);background:none;border:1px solid rgba(184,150,106,.3);
+  padding:1rem 3rem;cursor:none;
+  transition:border-color .3s,color .3s,background .3s;
+}
+.ob-cta:hover{border-color:var(--gold);color:var(--gold-lt)}
+.ob-hint{font-family:var(--sans);font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:1.2rem}
+
+/* ── NAV ─────────────────────────── */
+#top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.4rem clamp(1.5rem,3vw,2.5rem);
+  background:linear-gradient(to bottom,rgba(5,5,8,.88) 0%,transparent 100%);
+  opacity:0;pointer-events:none;transition:opacity .5s;
+}
+#top-nav.vis{opacity:1;pointer-events:all}
+.nav-home{font-family:var(--serif);font-size:.9rem;font-weight:400;letter-spacing:.06em;color:var(--ink-2);transition:color .2s;display:flex;align-items:center;gap:.4rem}
+.nav-home:hover{color:var(--gold-lt)}
+.nav-home .arr{font-family:var(--sans);font-size:.75rem}
+.domain-filters{display:flex;gap:.6rem;align-items:center}
+.df-btn{
+  font-family:var(--sans);font-size:.5rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-2);background:none;border:none;cursor:none;padding:.3rem .65rem;
+  border-bottom:1px solid transparent;transition:color .2s,border-color .2s;
+}
+.df-btn:hover,.df-btn.active{color:var(--ink);border-color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-exit{font-family:var(--sans);font-size:.5rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);background:none;border:none;cursor:none;transition:color .2s}
+.nav-exit:hover{color:var(--gold-lt)}
+
+/* ── TOOLTIP ─────────────────────── */
+#tooltip{
+  position:fixed;z-index:120;pointer-events:none;
+  display:flex;flex-direction:column;gap:.25rem;
+  opacity:0;transition:opacity .12s;
+  transform:translate(20px,-50%);
+}
+#tooltip.vis{opacity:1}
+.tt-title{font-family:var(--serif);font-size:.95rem;font-weight:400;color:var(--ink);white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,.9)}
+.tt-meta{font-family:var(--sans);font-size:.43rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+
+/* ── CARD BACKDROP ──────────────────── */
+#card-backdrop{
+  position:fixed;inset:0;z-index:149;
+  display:none;
+  cursor:none;
+}
+#card-backdrop.active{display:block;}
+
+/* ── PROJECT CARD ─────────────────── */
+#project-card{
+  position:fixed;z-index:150;
+  width:min(640px,88vw);      /* wider — matches an expanded node tile */
+  background:rgba(7,7,11,.94);
+  border:1px solid rgba(184,150,106,.18);
+  -webkit-backdrop-filter:blur(28px);
+  backdrop-filter:blur(28px);
+  pointer-events:none;
+  opacity:0;
+  /* Always screen-centered */
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.9);
+  transform-origin:center center;
+  transition:opacity .4s,border-color .3s;
+}
+#project-card.open{
+  opacity:1;pointer-events:all;
+  transform:translate(-50%,-50%) scale(1);
+  transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);
+}
+.card-img-wrap{position:relative;width:100%;padding-top:56.25%;background:#0a0a10;overflow:hidden}
+.card-img-wrap canvas,
+.card-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card-img-wrap img{opacity:0;transition:opacity .7s}
+.card-img-wrap img.loaded{opacity:1}
+.card-domain-bar{
+  position:absolute;bottom:0;left:0;right:0;height:2px;
+}
+/* card header: appears ABOVE the image */
+.card-header{
+  padding:1.2rem 1.6rem 1rem;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.card-header-left{flex:1;min-width:0}
+.card-close{
+  position:relative;top:auto;right:auto;
+  font-family:var(--sans);font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-2);background:none;border:none;cursor:none;z-index:2;
+  transition:color .2s;flex-shrink:0;padding:0;
+}
+.card-close:hover{color:var(--gold-lt)}
+.card-domains{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem}
+.card-domain-tag{
+  font-family:var(--sans);font-size:.4rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:.18rem .5rem;border:1px solid;border-radius:100px;
+}
+.card-title{font-family:var(--serif);font-size:1.35rem;font-weight:300;line-height:1.15;margin-bottom:.1rem;color:var(--ink)}
+.card-year{font-family:var(--sans);font-size:.45rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin-bottom:0}
+/* card body: appears BELOW the image */
+.card-body{padding:1.4rem 1.6rem 1.6rem}
+.card-desc{font-family:var(--serif);font-size:.92rem;line-height:1.72;color:rgba(221,213,194,.72);margin-bottom:1.4rem}
+.card-connections{margin-bottom:1.5rem}
+.card-conn-label{font-family:var(--sans);font-size:.44rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);margin-bottom:.55rem}
+.card-conn-list{display:flex;flex-wrap:wrap;gap:.35rem}
+.card-conn-node{
+  font-family:var(--sans);font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);border:1px solid var(--ink-3);padding:.18rem .5rem;cursor:none;
+  transition:color .2s,border-color .2s;background:none;
+}
+.card-conn-node:hover{color:var(--gold-lt);border-color:var(--gold)}
+.card-ctas{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.card-enter-btn{
+  font-family:var(--sans);font-size:.52rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:#050508;background:var(--gold);border:none;padding:.75rem 1.6rem;cursor:none;
+  transition:background .2s,color .2s;flex:1;
+}
+.card-enter-btn:hover{background:var(--gold-lt)}
+.card-nav{display:flex;gap:.5rem}
+.card-nav-btn{
+  font-family:var(--sans);font-size:.5rem;letter-spacing:.12em;
+  color:var(--ink-2);background:none;border:1px solid var(--ink-3);
+  padding:.65rem .9rem;cursor:none;transition:color .2s,border-color .2s;
+}
+.card-nav-btn:hover{color:var(--ink);border-color:var(--ink-2)}
+
+/* ── BREADCRUMB TRAIL LABEL ──────── */
+#journey-label{
+  position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
+  font-family:var(--sans);font-size:.44rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-2);z-index:100;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+#journey-label.vis{opacity:1}
+
+/* ── DRAG HINT ────────────────────── */
+#drag-hint{
+  position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  font-family:var(--sans);font-size:.44rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-2);z-index:100;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+#drag-hint.vis{opacity:1}
+
+/* ── NODE COUNTER ─────────────────── */
+#node-counter{
+  position:fixed;bottom:2rem;right:2rem;
+  font-family:var(--sans);font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);z-index:100;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+#node-counter.vis{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<canvas id="webgl-canvas"></canvas>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-eyebrow">The Atlas — Constellation Mode</div>
+  <h1 class="ob-title">Haig Papazian</h1>
+  <p class="ob-sub">A spatial archive of 14 years across sound, space, code, text, image, and systems.</p>
+  <div class="ob-stats">
+    <div class="ob-stat"><span class="ob-stat-n">74</span><span class="ob-stat-l">Works</span></div>
+    <div class="ob-stat"><span class="ob-stat-n">6</span><span class="ob-stat-l">Domains</span></div>
+    <div class="ob-stat"><span class="ob-stat-n">15</span><span class="ob-stat-l">Years</span></div>
+  </div>
+  <div class="ob-domains">
+    <span class="ob-domain-pill" style="color:var(--sound);border-color:var(--sound)">Sound</span>
+    <span class="ob-domain-pill" style="color:var(--text-c);border-color:var(--text-c)">Text</span>
+    <span class="ob-domain-pill" style="color:var(--image);border-color:var(--image)">Image</span>
+    <span class="ob-domain-pill" style="color:var(--code);border-color:var(--code)">Code</span>
+    <span class="ob-domain-pill" style="color:var(--space);border-color:var(--space)">Space</span>
+    <span class="ob-domain-pill" style="color:var(--systems);border-color:var(--systems)">Systems</span>
+  </div>
+  <button class="ob-cta" id="ob-enter">Enter the Constellation</button>
+  <div class="ob-hint">Drag to orbit · Scroll to zoom · Click to explore</div>
+</div>
+
+<!-- NAV -->
+<nav id="top-nav">
+  <a href="index.html" class="nav-home"><span class="arr">←</span> Papazian</a>
+  <div class="domain-filters">
+    <button class="df-btn active" data-domain="all">All</button>
+    <button class="df-btn" data-domain="sound">Sound</button>
+    <button class="df-btn" data-domain="text">Text</button>
+    <button class="df-btn" data-domain="image">Image</button>
+    <button class="df-btn" data-domain="code">Code</button>
+    <button class="df-btn" data-domain="space">Space</button>
+    <button class="df-btn" data-domain="systems">Systems</button>
+  </div>
+  <div class="nav-right">
+    <button class="nav-exit" id="nav-exit">× Exit</button>
+  </div>
+</nav>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-meta" id="tt-meta"></div>
+</div>
+
+<div id="card-backdrop"></div>
+
+<!-- PROJECT CARD -->
+<div id="project-card">
+  <!-- HEADER: title + domain tags ABOVE image -->
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-domains" id="card-domains"></div>
+      <h2 class="card-title" id="card-title"></h2>
+      <p class="card-year" id="card-year"></p>
+    </div>
+    <button class="card-close" id="card-close">×</button>
+  </div>
+  <!-- IMAGE: the visual centerpiece -->
+  <div class="card-img-wrap" id="card-img-wrap">
+    <canvas id="card-canvas" width="840" height="436"></canvas>
+    <img id="card-img" src="" alt="" crossorigin="anonymous">
+    <div class="card-domain-bar" id="card-domain-bar"></div>
+  </div>
+  <!-- BODY: description + connections + CTAs BELOW image -->
+  <div class="card-body">
+    <p class="card-desc" id="card-desc"></p>
+    <div class="card-connections">
+      <div class="card-conn-label">Connected Works</div>
+      <div class="card-conn-list" id="card-connections"></div>
+    </div>
+    <div class="card-ctas">
+      <button class="card-enter-btn" id="card-enter-btn">Open Project →</button>
+      <div class="card-nav">
+        <button class="card-nav-btn" id="card-prev" title="Previous">←</button>
+        <button class="card-nav-btn" id="card-next" title="Next">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JOURNEY TRAIL LABEL -->
+<div id="journey-label" id="journey-label"></div>
+
+<!-- DRAG HINT -->
+<div id="drag-hint">Drag to orbit · Scroll to zoom · Click to explore</div>
+
+<!-- NODE COUNTER -->
+<div id="node-counter"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const DC = {
+  sound:'#b8966a',text:'#5b8a7a',image:'#9a6b8a',
+  code:'#4a8a9a',space:'#7a9a4a',systems:'#7a5a9a'
+};
+const DC3 = {
+  sound:0xb8966a,text:0x5b8a7a,image:0x9a6b8a,
+  code:0x4a8a9a,space:0x7a9a4a,systems:0x7a5a9a
+};
+
+let RAW_NODES = [];
+let NODES = [];
+
+function setupData() {
+  if (typeof PROJECTS === 'undefined' || !PROJECTS || PROJECTS.length === 0) {
+    setTimeout(setupData, 50);
+    return;
+  }
+  RAW_NODES = PROJECTS;
+  // Deduplicate
+  NODES = [...new Map(RAW_NODES.map(n=>[n.id,n])).values()];
+  
+  initAtlas();
+}
+
+// Global instances for access in animate/controls
+let container, camera, scene, renderer, controls, postScene, postCam, rt, postMat;
+const objList = [];
+
+function initAtlas() {
+
+
+/* ═══════════════════════════════════════════
+   D3 LAYOUT — synchronous
+═══════════════════════════════════════════ */
+  // D3 LAYOUT
+  const nMap = new Map(NODES.map(n=>[n.id,{...n,x:(Math.random()-.5)*280,y:(Math.random()-.5)*280,vx:0,vy:0}]));
+  const nodeData = Array.from(nMap.values());
+  const linkData = [...new Set(RAW_EDGES.map(([s,t])=>[s,t].sort().join('--')))]
+    .map(k=>k.split('--'))
+    .map(([s,t])=>({source:nMap.get(s),target:nMap.get(t)}))
+    .filter(l=>l.source&&l.target);
+
+  const sim = d3.forceSimulation(nodeData)
+    .force('link',d3.forceLink(linkData).id(d=>d.id).distance(d=>{
+      const sz = n=>(n.tier===1?70:n.tier===2?48:28);
+      return sz(d.source)+sz(d.target)+18;
+    }).strength(.42))
+    .force('charge',d3.forceManyBody().strength(d=>-(d.tier===1?2800:d.tier===2?1200:400)))
+    .force('collision',d3.forceCollide().radius(d=>d.tier===1?70:d.tier===2?50:30))
+    .force('x',d3.forceX(0).strength(.06))
+    .force('y',d3.forceY(0).strength(.06))
+    .stop();
+
+  for(let i=0;i<500;i++) sim.tick();
+
+/* ═══════════════════════════════════════════
+   THREE.JS
+═══════════════════════════════════════════ */
+const canvas3d = document.getElementById('webgl-canvas');
+const renderer = new THREE.WebGLRenderer({canvas:canvas3d,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.setClearColor(0x050508,1);
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x050508,.00065);
+
+const camera = new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,3000);
+camera.position.set(0,0,700);
+
+// Render target for post-processing
+const rt = new THREE.WebGLRenderTarget(innerWidth,innerHeight,{
+  minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter
+});
+
+// Post shader: CA + grain + vignette
+const postScene = new THREE.Scene();
+const postCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const postMat = new THREE.ShaderMaterial({
+  uniforms:{uScene:{value:rt.texture},uTime:{value:0},uCA:{value:.0025},uGrain:{value:.016},uDoF:{value:0}},
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
+  fragmentShader:`
+    uniform sampler2D uScene;uniform float uTime,uCA,uGrain,uDoF;
+    varying vec2 vUv;
+    void main(){
+      vec2 uv=vUv,dir=normalize(uv-.5);
+      float r=texture2D(uScene,uv+dir*uCA).r;
+      float g=texture2D(uScene,uv).g;
+      float b=texture2D(uScene,uv-dir*uCA).b;
+      vec3 col=vec3(r,g,b);
+      // DoF radial blur when card is open
+      if(uDoF>0.0){
+        float blurAmt=uDoF*0.014;
+        vec3 blurred=vec3(0.0);
+        for(int i=0;i<8;i++){
+          float ang=float(i)*0.7854;
+          vec2 off=vec2(cos(ang),sin(ang))*blurAmt;
+          blurred+=texture2D(uScene,uv+off).rgb;
+        }
+        blurred/=8.0;
+        col=mix(col,blurred,uDoF*0.88);
+      }
+      float grain=fract(sin(dot(uv+fract(uTime*.05),vec2(12.9898,78.233)))*43758.5453);
+      col+=(grain-.5)*uGrain;
+      col*=smoothstep(1.5,.3,length((uv-.5)*2.2));
+      gl_FragColor=vec4(col,1.0);
+    }
+  `
+});
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
+
+/* ── HELPERS ────────────────────── */
+function nodeW(tier){return tier===1?90:tier===2?60:36;}
+function nodeH(tier){return tier===1?60:tier===2?40:24;}
+function nodeZ(tier, nx, ny){
+  // Volumetric 3D distribution: nodes far from center in XY also go far in Z
+  // This creates a genuine spherical cloud, not a pancake
+  const xyRadius = Math.sqrt(nx*nx + ny*ny);
+  const maxRadius = 220; // approximate max d3 layout radius
+  const normalizedR = Math.min(xyRadius / maxRadius, 1.0);
+  // Gaussian-like Z spread: nodes at edge of XY go ±100-160 on Z
+  // nodes near center stay close to 0 on Z
+  const spread = 40 + normalizedR * 140; // 40 at center, 180 at edge
+  const base = tier === 1 ? 15 : tier === 2 ? 0 : -20;
+  const noise = (Math.random() - 0.5) * 2 * spread; // full spread range
+  return base + noise;
+}
+function domainColor(d){return DC3[d.domains[0]]||0x5e5a55;}
+
+// Placeholder texture generator
+function makePlaceholder(col){
+  const sz=64;const c=document.createElement('canvas');c.width=sz;c.height=sz;
+  const cx=c.getContext('2d');
+  cx.fillStyle='#080810';cx.fillRect(0,0,sz,sz);
+  const hex='#'+col.toString(16).padStart(6,'0');
+  cx.fillStyle=hex+'18';
+  for(let i=0;i<sz;i+=8)for(let j=0;j<sz;j+=8)
+    if(Math.random()>.55)cx.fillRect(i,j,7,7);
+  cx.beginPath();cx.arc(sz/2,sz/2,sz/5,0,Math.PI*2);
+  cx.fillStyle=hex+'66';cx.fill();
+  const t=new THREE.CanvasTexture(c);return t;
+}
+
+/* ── BILLBOARD SHADER ────────────── */
+const BILLBOARD_VERT=`
+  uniform float uW,uH,uHov,uTime;
+  varying vec2 vUv;
+  void main(){
+    vUv=uv;
+    vec3 wp=(modelMatrix*vec4(0,0,0,1)).xyz;
+    vec3 cr=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]);
+    vec3 cu=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);
+    float pulse=1.0+uHov*.08+sin(uTime*1.2+wp.x*.008)*.012;
+    vec3 vp=wp+cr*position.x*uW*pulse+cu*position.y*uH*pulse;
+    gl_Position=projectionMatrix*viewMatrix*vec4(vp,1.0);
+  }
+`;
+const BILLBOARD_FRAG=`
+  uniform sampler2D uTex;
+  uniform vec3 uColor;
+  uniform float uOpacity,uHov,uDimmed,uTier;
+  varying vec2 vUv;
+  void main(){
+    vec2 uv=vUv;
+    // Crisp square mask — no rounding
+    float rx=0.0,ry=0.0;
+    vec2 c=uv*2.0-1.0;
+    vec2 d=abs(c)-vec2(1.0,1.0);
+    float dist=length(max(d,0.0))-0.0;
+    float mask=1.0-smoothstep(-.015,.015,dist);
+    vec4 tex=texture2D(uTex,uv);
+    // Edge darkening
+    float vg=1.0-smoothstep(.55,.98,length(uv-.5)*1.15);
+    vec3 col=tex.rgb*vg;
+    // Always-on persistent domain border — low alpha, architectural feel
+    float borderMask = 1.0 - smoothstep(-0.005, 0.005, abs(dist));
+    col = mix(col, uColor * 1.2, borderMask * 0.32);
+    // Hover rim — brighter layer on top of persistent border
+    float rimD=abs(dist+.032);
+    float rim=smoothstep(.045,0.0,rimD)*uHov;
+    col=mix(col,uColor*1.8,rim);
+    // Subtle domain tint
+    col=mix(col,uColor,.06);
+    // Dimming for non-active domain
+    col=mix(col,vec3(.04,.04,.06),uDimmed*.85);
+    gl_FragColor=vec4(col,mask*uOpacity);
+  }
+`;
+
+/* ── BUILD NODES ─────────────────── */
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+
+const objList = []; // {mesh, hitMesh, data, idx, opT, opC, hovT, dimT, visitedAt}
+
+NODES.forEach((n,i)=>{
+  const col=domainColor(n);
+  const colV=new THREE.Color(col);
+  const w=nodeW(n.tier),h=nodeH(n.tier);
+
+  const mat=new THREE.ShaderMaterial({
+    uniforms:{
+      uTex:{value:makePlaceholder(col)},
+      uColor:{value:colV},uOpacity:{value:0},
+      uHov:{value:0},uDimmed:{value:0},
+      uW:{value:w},uH:{value:h},uTier:{value:n.tier},uTime:{value:0}
+    },
+    vertexShader:BILLBOARD_VERT,fragmentShader:BILLBOARD_FRAG,
+    transparent:true,depthWrite:false,side:THREE.DoubleSide
+  });
+
+  const geo=new THREE.PlaneGeometry(1,1);
+  const mesh=new THREE.Mesh(geo,mat);
+  const pos = nMap.get(n.id);
+  const z = nodeZ(n.tier, pos.x, pos.y); // pass XY for volumetric distribution
+  mesh.position.set(pos.x,pos.y,z);
+  mesh.userData={id:n.id,idx:i};
+  scene.add(mesh);
+
+  // Invisible hit plane
+  const hitMat=new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide});
+  const hitGeo=new THREE.PlaneGeometry(w*2.2,h*2.2);
+  const hitMesh=new THREE.Mesh(hitGeo,hitMat);
+  hitMesh.position.copy(mesh.position);
+  hitMesh.userData={nodeIdx:i};
+  scene.add(hitMesh);
+
+  objList.push({mesh,hitMesh,data:n,idx:i,opT:0,opC:0,hovT:0,dimT:0,visitedAt:null});
+
+  // Async texture load — staggered
+  setTimeout(()=>{
+    const url=n.img;
+    const fallback=n.fb||null;
+    texLoader.load(url,t=>{
+      t.encoding=THREE.sRGBEncoding;
+      mat.uniforms.uTex.value=t;
+    },undefined,()=>{
+      if(fallback) texLoader.load(fallback,t=>{
+        t.encoding=THREE.sRGBEncoding;
+        mat.uniforms.uTex.value=t;
+      });
+    });
+  },i*25);
+});
+
+/* ── EDGE HELPERS ─────────────────── */
+// Compute the world-space point on the rectangle boundary of a billboard node
+// where a line from its center toward `targetPos` exits the rectangle.
+// Billboards face the camera, so we use camera right/up axes.
+function edgePoint(obj, targetPos){
+  const p = obj.mesh.position;
+  const w = nodeW(obj.data.tier);
+  const h = nodeH(obj.data.tier);
+
+  // Direction from this node center toward target in world space
+  const dir = new THREE.Vector3().subVectors(targetPos, p).normalize();
+
+  // Project dir onto billboard plane (camera right + up)
+  const cr = new THREE.Vector3(camera.matrixWorld.elements[0], camera.matrixWorld.elements[1], camera.matrixWorld.elements[2]);
+  const cu = new THREE.Vector3(camera.matrixWorld.elements[4], camera.matrixWorld.elements[5], camera.matrixWorld.elements[6]);
+
+  const dx = dir.dot(cr);  // component along camera-right
+  const dy = dir.dot(cu);  // component along camera-up
+
+  // Find parametric t where the 2D ray (dx,dy) exits rectangle (-w/2,w/2) x (-h/2,h/2)
+  let t = Infinity;
+  if(Math.abs(dx) > 1e-6) t = Math.min(t, (w * 0.5) / Math.abs(dx));
+  if(Math.abs(dy) > 1e-6) t = Math.min(t, (h * 0.5) / Math.abs(dy));
+  if(!isFinite(t)) t = 0;
+
+  // Reconstruct the 3D edge point using the camera axes
+  return new THREE.Vector3(
+    p.x + (cr.x * dx + cu.x * dy) * t,
+    p.y + (cr.y * dx + cu.y * dy) * t,
+    p.z + (cr.z * dx + cu.z * dy) * t
+  );
+}
+
+function buildBaseEdges(filterDomain){
+  const pos=[],col=[];
+  linkData.forEach(l=>{
+    const so=objList.find(o=>o.data.id===l.source.id);
+    const to=objList.find(o=>o.data.id===l.target.id);
+    if(!so||!to) return;
+    const active = filterDomain==='all'||
+      (l.source.domains.includes(filterDomain)&&l.target.domains.includes(filterDomain));
+    const alpha=active?.09:.015;
+    const c=new THREE.Color(0xffffff);
+    // Edge points: terminate at rectangular boundary, not center
+    const sp = edgePoint(so, to.mesh.position);
+    const tp = edgePoint(to, so.mesh.position);
+    pos.push(sp.x,sp.y,sp.z, tp.x,tp.y,tp.z);
+    col.push(c.r,c.g,c.b,alpha, c.r,c.g,c.b,alpha);
+  });
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,4));
+  return g;
+}
+
+const baseMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+// Start with empty geometry — rebuilt after first render when camera matrix is valid
+let baseEdges=new THREE.LineSegments(new THREE.BufferGeometry(),baseMat);
+scene.add(baseEdges);
+let _edgesBuilt = false; // flag to rebuild once camera matrix is ready
+
+
+// Hover highlight edges — domain-colored
+const hovMat=new THREE.LineBasicMaterial({color:0xb8966a,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+let hovEdges=new THREE.LineSegments(new THREE.BufferGeometry(),hovMat);
+scene.add(hovEdges);
+
+// Breadcrumb / journey trail edges
+const trailMat=new THREE.LineBasicMaterial({color:0xd4b08a,transparent:true,opacity:.0,depthWrite:false,blending:THREE.AdditiveBlending});
+let trailEdges=new THREE.LineSegments(new THREE.BufferGeometry(),trailMat);
+scene.add(trailEdges);
+
+function buildHovEdges(nodeId){
+  const pos=[];
+  linkData.forEach(l=>{
+    if(l.source.id!==nodeId&&l.target.id!==nodeId) return;
+    const so=objList.find(o=>o.data.id===l.source.id);
+    const to=objList.find(o=>o.data.id===l.target.id);
+    if(!so||!to) return;
+    // Terminate at boundary
+    const sp = edgePoint(so, to.mesh.position);
+    const tp = edgePoint(to, so.mesh.position);
+    pos.push(sp.x,sp.y,sp.z, tp.x,tp.y,tp.z);
+  });
+  const g=new THREE.BufferGeometry();
+  if(pos.length) g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  hovEdges.geometry.dispose();
+  hovEdges.geometry=g;
+}
+
+// Journey trail (visited node-to-node path)
+const journeyPath=[];
+function updateTrailEdges(){
+  const pos=[];
+  for(let i=0;i<journeyPath.length-1;i++){
+    const a=objList.find(o=>o.data.id===journeyPath[i]);
+    const b=objList.find(o=>o.data.id===journeyPath[i+1]);
+    if(!a||!b) continue;
+    // Terminate at boundary
+    const sp = edgePoint(a, b.mesh.position);
+    const tp = edgePoint(b, a.mesh.position);
+    pos.push(sp.x,sp.y,sp.z, tp.x,tp.y,tp.z);
+  }
+  const g=new THREE.BufferGeometry();
+  if(pos.length) g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  trailEdges.geometry.dispose();
+  trailEdges.geometry=g;
+  if(journeyPath.length>1){
+    gsap.to(trailMat,{opacity:.55,duration:.5});
+    const jLabel=document.getElementById('journey-label');
+    jLabel.textContent=`Journey: ${journeyPath.length} nodes`;
+    jLabel.classList.add('vis');
+  }
+}
+
+/* ── RAYCASTER ───────────────────── */
+const raycaster=new THREE.Raycaster();
+const mNDC=new THREE.Vector2();
+let hovObj=null,selObj=null;
+
+function syncHitMeshes(){
+  objList.forEach(o=>{
+    o.hitMesh.position.copy(o.mesh.position);
+    o.hitMesh.quaternion.copy(camera.quaternion);
+  });
+}
+
+function doRaycast(){
+  syncHitMeshes();
+  raycaster.setFromCamera(mNDC,camera);
+  const hits=raycaster.intersectObjects(objList.map(o=>o.hitMesh));
+  return hits.length>0?objList[hits[0].object.userData.nodeIdx]:null;
+}
+
+/* ── CAMERA STATE MACHINE ────────── */
+// STATES: 'idle' | 'hover' | 'flight' | 'focus'
+let camMode='idle';
+const cam={
+  theta:0,phi:Math.PI/2,radius:700,
+  tTheta:0,tPhi:Math.PI/2,tRadius:700,
+  autoRotate:true,dragging:false,
+  dragX:0,dragY:0,dTheta:0,dPhi:0,
+  lookAt:new THREE.Vector3(0,0,0),
+  tLookAt:new THREE.Vector3(0,0,0),
+  flightFrom:new THREE.Vector3(),
+  flightTarget:new THREE.Vector3(),
+  flightT:0,flightDuration:.018, // per frame increment
+};
+
+function spherical(theta,phi,r){
+  return new THREE.Vector3(
+    r*Math.sin(phi)*Math.sin(theta),
+    r*Math.cos(phi),
+    r*Math.sin(phi)*Math.cos(theta)
+  );
+}
+
+function flyTo(obj){
+  const n=obj.data;
+  const nodePos=obj.mesh.position.clone();
+
+  // Tight zoom: node fills ~55% of screen height ("filling the frame")
+  const fovRad = camera.fov * Math.PI / 180;
+  const pullBack = (nodeH(n.tier) / 0.55) / (2 * Math.tan(fovRad / 2)) + 18;
+
+  // Direction from node toward camera — step back along it cleanly
+  const towardCam = camera.position.clone().sub(nodePos).normalize();
+  const destPos = nodePos.clone().add(towardCam.clone().multiplyScalar(pullBack));
+
+  // Look straight at the node center — NO lateral offset
+  // The card appears centered over the node, creating the expansion illusion
+  const lookAtTarget = nodePos.clone();
+
+  // Save previous state for camera return on close
+  cam._prevPos = camera.position.clone();
+  cam._prevLookAt = cam.lookAt.clone();
+  cam._flightDest = destPos.clone();  // for proximity threshold
+  cam._flightTarget = selObj;         // guard ref
+  cam._cardTriggered = false;          // reset proximity guard
+
+  camMode = 'flight';
+  cam.autoRotate = false;
+
+  // GSAP drives the camera directly — no spherical coordinate flight loop
+  gsap.killTweensOf(camera.position);
+  gsap.killTweensOf(cam.lookAt);
+  gsap.to(camera.position, {
+    x: destPos.x, y: destPos.y, z: destPos.z,
+    duration: 1.4, ease: 'power3.inOut'
+  });
+  gsap.to(cam.lookAt, {
+    x: lookAtTarget.x, y: lookAtTarget.y, z: lookAtTarget.z,
+    duration: 1.4, ease: 'power3.inOut',
+    onComplete: () => { camMode = 'focus'; }
+  });
+
+  // CA aberration spike
+  gsap.killTweensOf(postMat.uniforms.uCA);
+  gsap.to(postMat.uniforms.uCA,{value:.014,duration:.12,yoyo:true,repeat:1,onComplete:()=>{postMat.uniforms.uCA.value=.0025;}});
+}
+
+function easeInOutCubic(t){
+  return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+}
+
+/* ── MOUSE ───────────────────────── */
+const cursor=document.getElementById('cursor');
+const tooltip=document.getElementById('tooltip');
+const ttTitle=document.getElementById('tt-title');
+const ttMeta=document.getElementById('tt-meta');
+
+window.addEventListener('mousemove',e=>{
+  const cx=e.clientX,cy=e.clientY;
+  cursor.style.left=cx+'px';cursor.style.top=cy+'px';
+  tooltip.style.left=cx+'px';tooltip.style.top=cy+'px';
+  mNDC.set((cx/innerWidth)*2-1,-(cy/innerHeight)*2+1);
+  if(cam.dragging){
+    const dx=cx-cam.dragX,dy=cy-cam.dragY;
+    cam.tTheta=cam.dTheta-dx*.005;
+    cam.tPhi=Math.max(.18,Math.min(Math.PI-.18,cam.dPhi+dy*.005));
+    cam.autoRotate=false;
+  }
+});
+
+canvas3d.addEventListener('mousedown',e=>{
+  cam.dragging=true;
+  cam.dragX=e.clientX;cam.dragY=e.clientY;
+  cam.dTheta=cam.tTheta;cam.dPhi=cam.tPhi;
+  clearTimeout(cam._rotTimer);
+});
+window.addEventListener('mouseup',e=>{
+  if(!cam.dragging) return;
+  cam.dragging=false;
+  // Re-enable auto-rotate after 5s
+  cam._rotTimer=setTimeout(()=>{if(camMode==='idle')cam.autoRotate=true;},5000);
+});
+
+canvas3d.addEventListener('wheel',e=>{
+  cam.tRadius=Math.max(80,Math.min(1400,cam.tRadius+e.deltaY*.45));
+  e.preventDefault();
+},{passive:false});
+
+// Click
+canvas3d.addEventListener('click',e=>{
+  if(Math.abs(e.clientX-cam.dragX)>4||Math.abs(e.clientY-cam.dragY)>4) return;
+  const hit=doRaycast();
+  if(hit){
+    if(selObj&&selObj!==hit){
+      // Card-to-card: close current, log journey, pan to new
+      // Briefly close existing card first so proximity threshold triggers fresh
+      card.classList.remove('open');
+      card.style.opacity='0';
+      document.getElementById('card-backdrop').classList.remove('active');
+      window._cardParallax=false;
+      gsap.killTweensOf(postMat.uniforms.uDoF);
+      gsap.to(postMat.uniforms.uDoF,{value:0,duration:0.25});
+      journeyPath.push(hit.data.id);
+      updateTrailEdges();
+    } else if(!selObj){
+      journeyPath.push(hit.data.id);
+    }
+    selObj=hit;
+    flyTo(hit);
+    // openCard is triggered by proximity threshold in animate loop
+  } else if(!document.getElementById('project-card').classList.contains('open')){
+    // click empty space — no-op
+  }
+});
+
+/* ── HOVER LOGIC ─────────────────── */
+let hoverCheckFrame=0;
+function updateHover(){
+  if(++hoverCheckFrame%2!==0) return;
+  if(cam.dragging||camMode==='flight') return;
+  const hit=doRaycast();
+  if(hit!==hovObj){
+    // Unhover old
+    if(hovObj){
+      gsap.to(hovMat,{opacity:0,duration:.25});
+      // un-dim connected nodes
+      const connIds=getConnected(hovObj.data.id);
+      objList.forEach(o=>{
+        if(connIds.has(o.data.id)||o===hovObj) return;
+        o.dimT=0; // fade out dim
+      });
+    }
+    hovObj=hit;
+    if(hit){
+      // Show hover edges
+      buildHovEdges(hit.data.id);
+      gsap.to(hovMat,{opacity:.7,duration:.2});
+      // Set domain color for hover edges
+      const hc=new THREE.Color(domainColor(hit.data));
+      hovMat.color=hc;
+      // Dim non-connected nodes
+      const connIds=getConnected(hit.data.id);
+      objList.forEach(o=>{
+        if(connIds.has(o.data.id)||o===hit) { o.dimT=0; }
+        else { o.dimT=1; }
+      });
+      // Tooltip
+      ttTitle.textContent=hit.data.title;
+      ttMeta.textContent=hit.data.domains.join(' · ')+' · '+hit.data.year;
+      tooltip.classList.add('vis');
+      cursor.classList.add('hover');
+    } else {
+      tooltip.classList.remove('vis');
+      cursor.classList.remove('hover');
+      objList.forEach(o=>{ o.dimT=0; });
+    }
+  }
+}
+
+function getConnected(nodeId){
+  const s=new Set([nodeId]);
+  linkData.forEach(l=>{
+    if(l.source.id===nodeId) s.add(l.target.id);
+    if(l.target.id===nodeId) s.add(l.source.id);
+  });
+  return s;
+}
+
+/* ── PROJECT CARD ─────────────────── */
+const card=document.getElementById('project-card');
+const cardCanvas=document.getElementById('card-canvas');
+const cardImg=document.getElementById('card-img');
+const cardTitle=document.getElementById('card-title');
+const cardYear=document.getElementById('card-year');
+const cardDesc=document.getElementById('card-desc');
+const cardDomains=document.getElementById('card-domains');
+const cardConns=document.getElementById('card-connections');
+const cardEnterBtn=document.getElementById('card-enter-btn');
+const cardDomainBar=document.getElementById('card-domain-bar');
+
+function getScreenPos(mesh){
+  const v = mesh.position.clone();
+  // Apply scene rotation to match render
+  v.applyEuler(scene.rotation);
+  v.project(camera);
+  return {
+    x: (v.x + 1) / 2 * innerWidth,
+    y: -(v.y - 1) / 2 * innerHeight
+  };
+}
+
+function openCard(obj){
+  const n=obj.data;
+  cardTitle.textContent=n.title;
+  cardYear.textContent=n.year;
+  cardDesc.textContent=n.desc;
+  cardEnterBtn.onclick=()=>{ window.location.href=`projects/${n.id}.html`; };
+
+  // Domain tags
+  cardDomains.innerHTML=n.domains.map(d=>
+    `<span class="card-domain-tag" style="color:${DC[d]};border-color:${DC[d]}44">${d}</span>`
+  ).join('');
+
+  // Domain bar gradient
+  const stops=n.domains.map((d,i)=>`${DC[d]} ${Math.round(i/n.domains.length*100)}%`).join(',');
+  cardDomainBar.style.background=`linear-gradient(to right,${stops})`;
+
+  // Connections
+  const connObjs=linkData
+    .filter(l=>l.source.id===n.id||l.target.id===n.id)
+    .map(l=>l.source.id===n.id?l.target:l.source)
+    .slice(0,6);
+  cardConns.innerHTML=connObjs.map(c=>
+    `<button class="card-conn-node" onclick="jumpToNode('${c.id}')">${c.title}</button>`
+  ).join('');
+
+  // Pixelated placeholder
+  const pCtx=cardCanvas.getContext('2d');
+  pCtx.imageSmoothingEnabled=false;
+  const tw=24,th=13;
+  const sm=document.createElement('canvas');sm.width=tw;sm.height=th;
+  const sc=sm.getContext('2d');
+  const base=DC[n.domains[0]]||'#5e5a55';
+  for(let px=0;px<tw;px++)for(let py=0;py<th;py++){
+    sc.fillStyle=Math.random()>.45?base+'33':'#080810';sc.fillRect(px,py,1,1);
+  }
+  pCtx.clearRect(0,0,840,436);
+  pCtx.drawImage(sm,0,0,840,436);
+
+  // Load hi-res
+  cardImg.classList.remove('loaded');cardImg.src='';
+  const src=n.img||n.fb;
+  if(src){
+    const tmp=new Image();tmp.crossOrigin='anonymous';
+    tmp.onload=()=>{ cardImg.src=tmp.src;cardImg.classList.add('loaded'); };
+    tmp.onerror=()=>{ if(n.fb&&tmp.src!==n.fb) tmp.src=n.fb; };
+    tmp.src=src;
+  }
+
+  // Animate card from node's screen position to reading position
+  const sp = getScreenPos(obj.mesh);
+  const finalLeft = '50%'; // always centered — card overlays the node
+  card.style.transition = 'none';
+  card.style.opacity = '0';
+  card.style.left = sp.x + 'px';
+  card.style.top = sp.y + 'px';
+  card.style.transform = 'translate(-50%,-50%) scale(0.08)';
+  card.style.pointerEvents = 'none';
+  // Force layout flush
+  card.offsetWidth;
+  // Animate to final reading position
+  card.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1), left 0.55s cubic-bezier(0.4,0,0.2,1), top 0.55s cubic-bezier(0.4,0,0.2,1)';
+  card.style.opacity = '1';
+  card.style.left = finalLeft;
+  card.style.top = '50%';
+  card.style.transform = 'translate(-50%,-50%) scale(1)';
+  card.style.pointerEvents = 'all';
+  card.classList.add('open');
+
+  // Activate backdrop and trigger DoF blur
+  document.getElementById('card-backdrop').classList.add('active');
+  gsap.killTweensOf(postMat.uniforms.uDoF);
+  gsap.to(postMat.uniforms.uDoF, {value: 1, duration: 0.7, ease: 'power2.inOut'});
+  window._cardParallax = true;
+}
+
+function closeCard(){
+  // Reverse morph: card shrinks back toward node's screen position
+  const sp = selObj ? getScreenPos(selObj.mesh) : {x: innerWidth/2, y: innerHeight/2};
+  card.style.transition = 'opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1), left 0.4s cubic-bezier(0.4,0,0.2,1), top 0.4s cubic-bezier(0.4,0,0.2,1)';
+  card.style.opacity = '0';
+  card.style.left = sp.x + 'px';
+  card.style.top = sp.y + 'px';
+  card.style.transform = 'translate(-50%,-50%) scale(0.05)';
+  card.style.pointerEvents = 'none';
+
+  document.getElementById('card-backdrop').classList.remove('active');
+  window._cardParallax = false;
+
+  // Fade out DoF blur
+  gsap.killTweensOf(postMat.uniforms.uDoF);
+  gsap.to(postMat.uniforms.uDoF, {value: 0, duration: 0.5, ease: 'power2.inOut'});
+
+  // Camera return to saved position
+  gsap.killTweensOf(camera.position);
+  gsap.killTweensOf(cam.lookAt);
+  if(cam._prevPos){
+    gsap.to(camera.position, {
+      x: cam._prevPos.x, y: cam._prevPos.y, z: cam._prevPos.z,
+      duration: 1.2, ease: 'power2.inOut'
+    });
+    gsap.to(cam.lookAt, {
+      x: cam._prevLookAt.x, y: cam._prevLookAt.y, z: cam._prevLookAt.z,
+      duration: 1.2, ease: 'power2.inOut',
+      onComplete: () => {
+        camMode = 'idle';
+        cam.autoRotate = true;
+        card.classList.remove('open');
+        // Reset position for next open
+        card.style.left = '50%';
+        card.style.top = '50%';
+      }
+    });
+  } else {
+    camMode = 'idle';
+    cam.autoRotate = true;
+    setTimeout(()=> {
+      card.classList.remove('open');
+      card.style.left = '50%';
+      card.style.top = '50%';
+    }, 420);
+  }
+
+  selObj = null;
+  gsap.to(hovMat, {opacity: 0, duration: .3});
+  if(journeyPath.length < 2) gsap.to(trailMat, {opacity: 0, duration: .5});
+  objList.forEach(o => { o.dimT = 0; });
+}
+
+document.getElementById('card-close').addEventListener('click',closeCard);
+document.getElementById('card-backdrop').addEventListener('click',closeCard);
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && selObj) closeCard();
+});
+
+// Prev/next through all nodes
+document.getElementById('card-prev').addEventListener('click',()=>{
+  if(!selObj||camMode==='flight') return;
+  const i=(selObj.idx-1+NODES.length)%NODES.length;
+  navigateTo(objList[i]);
+});
+document.getElementById('card-next').addEventListener('click',()=>{
+  if(!selObj||camMode==='flight') return;
+  const i=(selObj.idx+1)%NODES.length;
+  navigateTo(objList[i]);
+});
+
+function navigateTo(obj){
+  // Dismiss current card immediately with reverse morph
+  if(selObj){
+    const sp = getScreenPos(selObj.mesh);
+    card.style.transition = 'opacity 0.25s, transform 0.25s, left 0.25s, top 0.25s';
+    card.style.opacity='0';
+    card.style.left = sp.x+'px'; card.style.top = sp.y+'px';
+    card.style.transform='translate(-50%,-50%) scale(0.05)';
+    card.style.pointerEvents='none';
+    document.getElementById('card-backdrop').classList.remove('active');
+    window._cardParallax=false;
+    gsap.killTweensOf(postMat.uniforms.uDoF);
+    gsap.to(postMat.uniforms.uDoF,{value:0,duration:0.25});
+  }
+  journeyPath.push(obj.data.id);
+  updateTrailEdges();
+  selObj=obj;
+  // Brief zoom-out then fly to new node
+  cam.tRadius=Math.min(cam.tRadius*1.12,900);
+  setTimeout(()=>{
+    flyTo(obj);
+    // openCard is triggered by proximity threshold in animate loop
+  },320);
+}
+
+
+window.jumpToNode=function(id){
+  const obj=objList.find(o=>o.data.id===id);
+  if(!obj) return;
+  navigateTo(obj);
+};
+
+// Card parallax on mousemove — only while card is open and flight not active
+window.addEventListener('mousemove',e=>{
+  if(!window._cardParallax||camMode==='flight') return;
+  if(!card.classList.contains('open')) return;
+  const rx=((e.clientX/innerWidth)-.5)*5;
+  const ry=(-(e.clientY/innerHeight)+.5)*3.5;
+  card.style.transform=`translate(-50%,-50%) scale(1) perspective(1000px) rotateY(${rx}deg) rotateX(${ry}deg)`;
+});
+
+/* ── DOMAIN FILTER ───────────────── */
+let activeDomain='all';
+document.querySelectorAll('.df-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeDomain=btn.dataset.domain;
+    document.querySelectorAll('.df-btn').forEach(b=>b.classList.toggle('active',b.dataset.domain===activeDomain));
+    scene.remove(baseEdges);
+    baseEdges.geometry.dispose();
+    baseEdges=new THREE.LineSegments(buildBaseEdges(activeDomain),baseMat);
+    scene.add(baseEdges);
+    // Node opacity targets
+    objList.forEach(o=>{
+      o.opT=(activeDomain==='all'||o.data.domains.includes(activeDomain))?1:.07;
+    });
+  });
+});
+
+/* ── RESIZE ──────────────────────── */
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  rt.setSize(innerWidth,innerHeight);
+});
+
+/* ── ONBOARDING ──────────────────── */
+let running=false;
+function startAtlas(){
+  running=true;
+  gsap.to('#onboarding',{opacity:0,duration:1.2,ease:'power2.inOut',onComplete:()=>{
+    document.getElementById('onboarding').style.display='none';
+  }});
+  document.getElementById('top-nav').classList.add('vis');
+  document.getElementById('node-counter').classList.add('vis');
+  
+  // Stagger the drag-hint sequence
+  setTimeout(()=>{
+    document.getElementById('drag-hint').classList.add('vis');
+    setTimeout(()=>gsap.to('#drag-hint',{opacity:0,duration:1.5}),4500);
+  }, 1000);
+
+  // Fade in all nodes
+  objList.forEach((o,i)=>{
+    o.opT=0; o.opC=0; // Reset
+    gsap.delayedCall(i*.008 + 0.5,()=>{ o.opT=1; });
+  });
+  
+  sessionStorage.setItem('atlas3d-v2','1');
+  
+  // Cinematic Entrance Camera Sequence
+  cam.tRadius = 3500;
+  cam.tPhi = Math.PI / 2.5;
+  cam.tTheta = -Math.PI / 1.5;
+  
+  // Snap to start
+  cam.radius = 4000;
+  cam.phi = Math.PI / 2.2;
+  cam.theta = -Math.PI / 1.2;
+
+  gsap.to(cam, {
+    tRadius: 1600,
+    tPhi: Math.PI / 4,
+    tTheta: -Math.PI / 3,
+    duration: 5,
+    ease: "power3.inOut"
+  });
+
+  // Fade through a dramatic bloom/aberration sequence
+  gsap.to(postMat.uniforms.uCA, { value: 0.02, duration: 2, ease: "power2.out" });
+  gsap.to(postMat.uniforms.uCA, { value: 0.0025, duration: 3, delay: 2, ease: "power2.inOut" });
+
+  const tl = gsap.timeline();
+  tl.to(cam, {
+    tRadius: 900,
+    tPhi: Math.PI / 2.2,
+    tTheta: Math.PI / 8,
+    duration: 3.5,
+    ease: "power2.inOut"
+  })
+  .to(cam, {
+    tRadius: 700,
+    tPhi: Math.PI / 2,
+    tTheta: Math.PI / 4,
+    duration: 3,
+    ease: "power3.out"
+  }, "-=1.0");
+}
+
+// Always show onboarding — cinematic entrance runs every time
+document.getElementById('ob-enter').addEventListener('click', startAtlas);
+// Click anywhere on the onboarding overlay also dismisses it
+document.getElementById('onboarding').addEventListener('click', (e) => {
+  // Don't double-fire if clicking the button itself
+  if (!running) startAtlas();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!running) startAtlas(); });
+
+/* ── EXIT / PAGE TRANSITION ──────────────── */
+function doTransition(href) {
+  if (!href || href.startsWith('#')) return;
+  const bar = document.getElementById('page-transition');
+  gsap.set(bar, { yPercent: 100 });
+  const tl = gsap.timeline({ onComplete: () => { window.location.href = href; }});
+  tl.to(bar, { yPercent: 0, duration: 0.6, ease: 'expo.inOut' })
+    .to(bar, { css: { '::after': { yPercent: 0 }}, duration: 0.6, ease: 'expo.inOut' }, "-=0.4");
+}
+
+document.getElementById('nav-exit').addEventListener('click',()=>doTransition('index.html'));
+document.querySelectorAll('a[href]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    doTransition(a.getAttribute('href'));
+  });
+});
+
+/* ── ANIMATE ─────────────────────── */
+const clock=new THREE.Clock();
+let frame=0;
+const nodeCounter=document.getElementById('node-counter');
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t=clock.getElapsedTime();frame++;
+  postMat.uniforms.uTime.value=t;
+
+  if(!running){
+    renderer.setRenderTarget(rt);renderer.render(scene,camera);
+    renderer.setRenderTarget(null);renderer.render(postScene,postCam);
+    return;
+  }
+
+  // ── Camera ──
+  if(camMode==='flight'){
+    // GSAP drives camera.position — keep lookAt in sync
+    camera.lookAt(cam.lookAt);
+    // Proximity threshold: open card when camera is close enough to destination
+    if(!cam._cardTriggered && selObj && cam._flightDest){
+      const remaining = camera.position.distanceTo(cam._flightDest);
+      const fovRad = camera.fov * Math.PI / 180;
+      const pullBack = (nodeH(selObj.data.tier) / 0.30) / (2 * Math.tan(fovRad / 2)) + 50;
+      if(remaining < pullBack * 1.25){
+        cam._cardTriggered = true;
+        openCard(selObj);
+      }
+    }
+  } else if(camMode==='focus'){
+    camera.lookAt(cam.lookAt);
+  } else {
+    if(cam.autoRotate&&camMode==='idle') cam.tTheta+=.00035;
+    cam.theta+=(cam.tTheta-cam.theta)*.085;
+    cam.phi  +=(cam.tPhi  -cam.phi  )*.085;
+    cam.radius+=(cam.tRadius-cam.radius)*.09;
+    const cp=spherical(cam.theta,cam.phi,cam.radius);
+    camera.position.copy(cp);
+    cam.lookAt.lerp(new THREE.Vector3(0,0,0),.04);
+    camera.lookAt(cam.lookAt);
+  }
+
+  // Subtle scene tilt to mouse
+  scene.rotation.x+=(mNDC.y*.035-scene.rotation.x)*.03;
+  scene.rotation.y+=(mNDC.x*.035-scene.rotation.y)*.03;
+
+  // ── Hover check ──
+  if(camMode!=='flight') updateHover();
+
+  // ── Per-node updates ──
+  objList.forEach(o=>{
+    o.opC+=(o.opT-o.opC)*.08;
+    const dTarget=o.dimT;
+    const dCur=(o.mesh.material.uniforms.uDimmed.value||0);
+    o.mesh.material.uniforms.uDimmed.value=dCur+(dTarget-dCur)*.09;
+    o.mesh.material.uniforms.uOpacity.value=o.opC;
+    const hTarget=hovObj===o?1:0;
+    const hCur=o.mesh.material.uniforms.uHov.value;
+    o.mesh.material.uniforms.uHov.value=hCur+(hTarget-hCur)*.12;
+    o.mesh.material.uniforms.uTime.value=t;
+    // Keep hit mesh synced
+    o.hitMesh.position.copy(o.mesh.position);
+    o.hitMesh.quaternion.copy(camera.quaternion);
+  });
+
+  // Rim light drift
+  scene.children.forEach(c=>{}); // no-op, keep loop clean
+
+  // ── Render ──
+  renderer.setRenderTarget(rt);
+  renderer.render(scene,camera);
+  camera.updateMatrixWorld(true); // ensure matrix up-to-date
+  renderer.setRenderTarget(null);
+  renderer.render(postScene,postCam);
+
+  // Build/rebuild base edges after camera matrix is valid
+  // Rebuild every ~180 frames so edges stay accurate as camera orbits
+  if(!_edgesBuilt || frame % 180 === 0){
+    scene.remove(baseEdges); baseEdges.geometry.dispose();
+    baseEdges = new THREE.LineSegments(buildBaseEdges('all'), baseMat);
+    scene.add(baseEdges);
+    _edgesBuilt = true;
+  }
+
+  // Counter (throttled)
+  if(frame%120===0){
+    camera.updateMatrixWorld();
+    const frustum=new THREE.Frustum();
+    frustum.setFromProjectionMatrix(
+      new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)
+    );
+    let v=0;
+    objList.forEach(o=>{
+      // Apply scene rotation to node world position for frustum test
+      const wp=o.mesh.position.clone().applyEuler(scene.rotation);
+      if(frustum.containsPoint(wp)&&o.opC>.1) v++;
+    });
+    nodeCounter.textContent=v+' / '+NODES.length+' works';
+  }
+}
+
+  animate();
+}
+
+// Start the loading sequence
+setupData();
+</script>
+</body>
+</html>

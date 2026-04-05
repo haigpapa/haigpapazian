@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haig Papazian</title>
+<meta name="description" content="Creative systems architect working at the intersection of sound, space, code, and culture.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="nav.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="three.min.js"></script>
+<script src="scrollama.min.js"></script>
+<style>
+/* Tokens, reset, cursor, nav, and page transition styles are in tokens.css and nav.css */
+
+/* ══════════════════════════════════════════════
+   HERO — full-bleed image
+══════════════════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+.hero-bg > img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 30%;
+  opacity: 0; transition: opacity 1.2s;
+}
+.hero-bg > img.loaded { opacity: 1; }
+.hero-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(7,7,6,.95) 0%,
+    rgba(7,7,6,.6) 35%,
+    rgba(7,7,6,.2) 65%,
+    rgba(7,7,6,.05) 100%
+  );
+}
+.hero-left {
+  display: flex; flex-direction: column;
+  padding: clamp(2rem,5vw,5rem) clamp(1.5rem,3vw,3rem);
+  padding-top: 8rem;
+  position: relative; z-index: 2;
+  max-width: 680px;
+}
+.hero-eyebrow {
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .24em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: 1.5rem; opacity: 0; transform: translateY(20px);
+}
+.hero-first {
+  display: block; font-family: var(--serif); font-weight: 300;
+  font-size: clamp(4rem,9vw,8.5rem); line-height: .9; color: var(--ink);
+  opacity: 0; transform: translateY(24px);
+}
+.hero-last {
+  display: block; font-family: var(--serif); font-weight: 300;
+  font-size: clamp(4rem,9vw,8.5rem); line-height: .9; color: var(--gold);
+  letter-spacing: .02em; margin-bottom: 2rem;
+  opacity: 0; transform: translateY(24px);
+}
+.hero-sub {
+  font-family: var(--sans); font-weight: 300;
+  font-size: clamp(.78rem,1.3vw,.95rem); line-height: 1.7; color: var(--ink-2);
+  border-left: 1px solid var(--gold); padding-left: 1.1rem;
+  max-width: 36ch; margin-bottom: 1.8rem;
+  opacity: 0; transform: translateY(20px);
+}
+.hero-cta {
+  display: flex; gap: .8rem; flex-wrap: wrap;
+  margin-bottom: 2.2rem;
+  opacity: 0; transform: translateY(16px);
+}
+.hero-cta-btn {
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  padding: .7rem 1.4rem; display: inline-flex; align-items: center; gap: .4rem;
+  transition: color .2s, background .2s, border-color .2s; cursor: none;
+}
+.hero-cta-btn--primary {
+  background: var(--gold); color: var(--bg); border: 1px solid var(--gold);
+}
+.hero-cta-btn--primary:hover { background: var(--gold-lt); border-color: var(--gold-lt); }
+.hero-cta-btn--secondary {
+  background: transparent; color: var(--ink-2); border: 1px solid var(--line-2);
+}
+.hero-cta-btn--secondary:hover { color: var(--gold); border-color: var(--gold); }
+.hero-meta {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border-top: 1px solid var(--line); padding-top: 1.4rem;
+}
+.hero-meta-item { opacity: 0; transform: translateY(12px); }
+.hero-meta-label {
+  font-family: var(--sans); font-size: .45rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .35rem;
+}
+.hero-meta-value {
+  font-family: var(--sans); font-size: .7rem; font-weight: 500; color: var(--ink-2);
+}
+.hero-caption {
+  position: absolute; bottom: 1.5rem; right: clamp(1.5rem,3vw,3rem);
+  font-family: var(--sans); font-size: .42rem; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(221,213,194,.4); z-index: 4;
+}
+
+/* Sections below fold paint opaque so canvas disappears naturally */
+#editorial, #works, #contact, footer {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+}
+
+/* ══════════════════════════════════════════════
+   EDITORIAL SPREAD — the intro that matters
+══════════════════════════════════════════════ */
+#editorial {
+  border-top: 1px solid var(--line);
+}
+
+/* ── Opening statement row ── */
+.ed-statement {
+  padding: clamp(4rem,8vw,7rem) clamp(1.5rem,3vw,3rem);
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 4rem;
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+}
+.ed-statement-label {
+  font-family: var(--sans); font-size: .5rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  padding-bottom: .6rem;
+}
+.ed-statement-text {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2rem,4.5vw,3.8rem); line-height: 1.12;
+  color: var(--ink); letter-spacing: -.01em;
+}
+.ed-statement-text em {
+  font-style: italic; color: var(--gold-lt);
+}
+
+/* ── Image spread ── */
+.ed-spread {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2rem;
+  padding: 0 clamp(1.5rem,3vw,3rem) clamp(4rem,10vw,8rem);
+}
+.ed-img {
+  position: relative; overflow: hidden; background: #0c0b0a;
+}
+.ed-img img {
+  position: absolute; top: -10%; left: 0;
+  width: 100%; height: 120%; object-fit: cover;
+  display: block; opacity: 0; transition: opacity .9s;
+}
+.ed-img img.loaded { opacity: 1; transform: scale(1); }
+.ed-img--primary {
+  grid-column: 1 / 3; grid-row: 1 / 3;
+  aspect-ratio: 16/9;
+}
+.ed-img--secondary {
+  grid-column: 3; grid-row: 1;
+  aspect-ratio: 4/3;
+}
+.ed-img--tertiary {
+  grid-column: 3; grid-row: 2;
+  aspect-ratio: 4/3;
+}
+.ed-img--caption {
+  grid-column: 1 / 4; grid-row: 3;
+  padding: 1.4rem 0 0 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 4rem;
+}
+.ed-caption-text {
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(.85rem,1.2vw,1rem); line-height: 1.7;
+  color: var(--ink-2); max-width: 42ch;
+}
+.ed-caption-meta {
+  font-family: var(--sans); font-size: .45rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-3); text-align: right;
+  flex-shrink: 0; line-height: 1.8;
+}
+
+/* ── Pull statement row ── */
+.ed-pull {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  padding: clamp(4rem,8vw,7rem) clamp(1.5rem,3vw,3rem);
+}
+.ed-pull-left {
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.ed-pull-quote {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.4rem,2.8vw,2.2rem); line-height: 1.3;
+  color: var(--ink); letter-spacing: -.005em; margin-bottom: 2rem;
+}
+.ed-pull-quote strong { color: var(--gold); font-weight: 400; }
+.ed-pull-attribution {
+  font-family: var(--sans); font-size: .5rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ed-pull-right {
+  display: flex; flex-direction: column; gap: 4rem; justify-content: center;
+}
+.ed-data-num {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2.8rem,5vw,4.5rem); line-height: 1; color: var(--gold);
+  letter-spacing: -.02em;
+}
+.ed-data-label {
+  font-family: var(--sans); font-size: .48rem; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+  margin-top: .4rem;
+}
+.ed-data-note {
+  font-family: var(--serif); font-style: italic; font-size: .85rem;
+  color: var(--ink-2); margin-top: .2rem; line-height: 1.5;
+}
+
+/* ── Research row ── */
+.ed-research {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 4rem;
+  padding: clamp(4rem,8vw,7rem) clamp(1.5rem,3vw,3rem);
+}
+.ed-research-label-col {
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.ed-research-eyebrow {
+  font-family: var(--sans); font-size: .5rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: .8rem;
+}
+.ed-research-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.1rem,1.8vw,1.5rem); color: var(--ink); line-height: 1.3;
+}
+.ed-research-body-col {
+  display: flex; flex-direction: column; gap: 1.8rem;
+}
+.ed-research-p {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(.95rem,1.4vw,1.1rem); line-height: 1.82;
+  color: var(--ink-2); max-width: 62ch;
+}
+.ed-research-p strong { color: var(--ink); font-weight: 400; }
+.ed-research-link {
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+  display: inline-flex; align-items: center; gap: .4rem;
+  border-bottom: 1px solid rgba(184,150,106,.2); padding-bottom: 2px;
+  transition: border-color .2s, color .2s; align-self: flex-start;
+}
+.ed-research-link:hover { border-color: var(--gold); color: var(--gold-lt); }
+
+/* ══════════════════════════════════════════════
+   SELECTED WORKS
+══════════════════════════════════════════════ */
+#works {
+  border-top: 1px solid var(--line);
+}
+.works-header {
+  padding: clamp(3rem,6vw,5rem) clamp(1.5rem,3vw,3rem) 0;
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 2.5rem;
+}
+.works-eyebrow {
+  font-family: var(--sans); font-size: .5rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: .6rem; display: block;
+}
+.works-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.6rem,3vw,2.4rem); color: var(--ink);
+}
+.works-view-all {
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2);
+  transition: color .2s; white-space: nowrap; display: inline-flex;
+  align-items: center; gap: .4rem;
+}
+.works-view-all:hover { color: var(--gold-lt); }
+
+/* Featured card — full bleed */
+.featured-work {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  padding: 0 clamp(1.5rem,3vw,3rem) clamp(3rem,6vw,5rem);
+  cursor: none; position: relative; overflow: hidden;
+}
+.fw-image {
+  position: relative; overflow: hidden;
+  aspect-ratio: 16/10; background: #0a0908;
+}
+.fw-image img {
+  position: absolute; top: -10%; left: 0;
+  width: 100%; height: 120%; object-fit: cover; display: block;
+  opacity: 0; transition: opacity .9s;
+}
+.fw-image img.loaded { opacity: 1; }
+.fw-image img.loaded { opacity: 1; transform: scale(1); }
+.fw-content {
+  display: flex; flex-direction: column; justify-content: center;
+}
+.fw-tag {
+  font-family: var(--sans); font-size: .48rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: 1.5rem;
+}
+.fw-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2rem,4vw,3.2rem); line-height: 1; color: var(--ink);
+  margin-bottom: 1rem;
+}
+.fw-desc {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(.88rem,1.3vw,1rem); line-height: 1.75;
+  color: var(--ink-2); margin-bottom: 2rem; max-width: 44ch;
+}
+.fw-cta {
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--bg);
+  background: var(--gold); padding: .75rem 1.5rem;
+  display: inline-flex; align-items: center; gap: .5rem;
+  align-self: flex-start;
+  transition: background .2s;
+}
+.fw-cta:hover { background: var(--gold-lt); }
+
+/* Works list */
+.work-row {
+  display: grid;
+  grid-template-columns: clamp(1.5rem,3vw,3rem) 1fr auto auto;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.25rem clamp(1.5rem,3vw,3rem);
+  border-bottom: 1px solid var(--line);
+  cursor: none; position: relative;
+  color: inherit; transition: background .15s;
+}
+.work-row:hover { background: rgba(184,150,106,.03); }
+.work-row-num {
+  font-family: var(--sans); font-size: .48rem; font-weight: 600;
+  letter-spacing: .14em; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.work-row-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(.95rem,1.6vw,1.2rem); color: var(--ink);
+  transition: color .2s;
+}
+.work-row:hover .work-row-title { color: var(--gold-lt); }
+.work-row-tags {
+  font-family: var(--sans); font-size: .44rem; font-weight: 500;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+  margin-top: .15rem;
+}
+.work-row-year {
+  font-family: var(--sans); font-size: .52rem; font-weight: 400;
+  letter-spacing: .12em; color: var(--ink-3); text-align: right;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.work-row-arrow {
+  font-size: .8rem; color: var(--ink-3);
+  transition: transform .2s, color .2s;
+}
+.work-row:hover .work-row-arrow { transform: translateX(3px); color: var(--gold); }
+.work-row::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 0; right: 100%; height: 1px;
+  background: var(--gold); transition: right .45s cubic-bezier(.4,0,.2,1);
+}
+.work-row:hover::after { right: 0; }
+
+/* Cursor preview */
+.row-preview {
+  position: fixed; width: 280px; height: 185px;
+  pointer-events: none; z-index: 500; overflow: hidden;
+  opacity: 0; transition: opacity .15s; will-change: transform; top: 0; left: 0;
+}
+.row-preview.visible { opacity: 1; }
+.row-preview img {
+  width: 100%; height: 100%; object-fit: cover;
+  position: absolute; inset: 0; opacity: 0; transition: opacity .5s;
+}
+.works-atlas-cta {
+  padding: 2rem clamp(1.5rem,3vw,3rem);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+}
+.wac-text {
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(.88rem,1.2vw,1rem); color: var(--ink-2);
+}
+.wac-link {
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-2);
+  border: 1px solid var(--ink-3); padding: .65rem 1.3rem;
+  display: inline-flex; align-items: center; gap: .4rem;
+  transition: color .2s, border-color .2s; white-space: nowrap;
+}
+.wac-link:hover { color: var(--gold-lt); border-color: var(--gold); }
+
+/* ══════════════════════════════════════════════
+   CONTACT / CLOSING
+══════════════════════════════════════════════ */
+#contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  padding: 0 clamp(1.5rem,3vw,3rem);
+}
+.contact-left {
+  padding: clamp(4rem,8vw,7rem) 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.contact-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2.2rem,5vw,4rem); line-height: 1.05; color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+.contact-sub {
+  font-family: var(--sans); font-weight: 300; font-size: .78rem;
+  line-height: 1.72; color: var(--ink-2); max-width: 42ch; margin-bottom: 3rem;
+}
+.contact-email {
+  font-family: var(--serif); font-size: clamp(1rem,1.8vw,1.4rem);
+  color: var(--gold); letter-spacing: .01em;
+  border-bottom: 1px solid rgba(184,150,106,.25); padding-bottom: 2px;
+  display: inline-block; transition: border-color .2s;
+}
+.contact-email:hover { border-color: var(--gold); }
+.contact-right {
+  padding: clamp(4rem,8vw,7rem) 0;
+  display: flex; flex-direction: column; gap: 0;
+}
+.contact-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 0; border-bottom: 1px solid var(--line);
+  color: inherit; position: relative; cursor: none;
+}
+.contact-link::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 0; right: 100%; height: 1px;
+  background: var(--gold); transition: right .45s cubic-bezier(.4,0,.2,1);
+}
+.contact-link:hover::after { right: 0; }
+.cl-label {
+  font-family: var(--sans); font-size: .48rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: .3rem;
+}
+.cl-value {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(.95rem,1.4vw,1.1rem); color: var(--ink);
+  transition: color .2s;
+}
+.contact-link:hover .cl-value { color: var(--gold-lt); }
+.cl-arrow { color: var(--ink-3); transition: transform .2s, color .2s; font-size: .75rem; }
+.contact-link:hover .cl-arrow { transform: translateX(3px); color: var(--gold); }
+
+/* ── FOOTER ─────────────────────────────────── */
+#footer {
+  padding: 1.8rem clamp(1.5rem,3vw,3rem);
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.footer-left {
+  font-family: var(--sans); font-size: .45rem; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+}
+.footer-right {
+  font-family: var(--serif); font-weight: 300; font-size: .85rem;
+  color: var(--ink-3); letter-spacing: .03em;
+}
+
+/* ── SCROLL REVEAL ───────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1);
+}
+.reveal.vis { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+
+/* ══════════════════════════════════════════════
+   EDITORIAL SYSTEM
+══════════════════════════════════════════════ */
+
+/* Masthead strip — dateline between hero and first section */
+.masthead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem clamp(1.5rem,3vw,3rem);
+  border-bottom: 1px solid var(--line);
+  position: relative; z-index: 1; background: var(--bg);
+}
+.masthead-item {
+  font-family: var(--sans); font-size: .42rem; font-weight: 500;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--ink-3);
+}
+.masthead-divider {
+  flex: 1; height: 1px; background: var(--line); margin: 0 2rem;
+}
+.masthead-center {
+  font-family: var(--sans); font-size: .42rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Section numbers */
+.section-num {
+  font-family: var(--sans); font-size: .4rem; font-weight: 600;
+  letter-spacing: .24em; text-transform: uppercase; color: var(--ink-3);
+  display: block; margin-bottom: .6rem;
+}
+
+/* Column rule on ed-statement label column */
+.ed-statement-col {
+  border-right: 1px solid var(--line);
+  padding-right: clamp(1.5rem,3vw,3rem);
+}
+
+/* Pull quote decorative mark */
+.ed-pull-quote::before {
+  content: '\201C';
+  display: block;
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(3rem,5vw,4.5rem); line-height: .75;
+  color: var(--gold); margin-bottom: .6rem; letter-spacing: -.02em;
+}
+
+/* Contact section label */
+.contact-issue {
+  font-family: var(--sans); font-size: .42rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  display: block; margin-bottom: 2rem;
+}
+
+/* Colophon footer */
+.footer-colophon {
+  font-family: var(--sans); font-size: .4rem; font-weight: 400;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════
+   SCROLLYTELLING SECTIONS
+══════════════════════════════════════════════ */
+.st-scroll-container {
+  position: relative;
+  display: flex;
+  border-top: 1px solid var(--line);
+}
+.st-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 55%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+}
+.st-steps {
+  width: 45%;
+}
+.st-step {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  padding: 3rem clamp(2rem,4vw,4rem);
+  opacity: 0.2;
+  transition: opacity 0.5s ease;
+  border-bottom: 1px solid var(--line);
+}
+.st-step.is-active { opacity: 1; }
+.st-step:first-child { margin-top: 50vh; }
+.st-step:last-child { margin-bottom: 50vh; border-bottom: none; }
+
+.st-statement-sticky {
+  padding: clamp(2rem,4vw,4rem);
+  max-width: 580px;
+  position: relative; z-index: 1;
+}
+.st-phrase {
+  display: block;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(2.2rem,3.8vw,3.4rem);
+  line-height: 1.18;
+  color: var(--ink);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: .05em;
+}
+.st-phrase.revealed { clip-path: inset(0 0% 0 0); }
+.st-phrase em { color: var(--gold-lt); font-style: italic; }
+
+.st-step-domain {
+  font-family: var(--sans);
+  font-size: .5rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase;
+  margin-bottom: .8rem; display: block;
+}
+.st-step-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.4rem,2.5vw,2rem);
+  color: var(--ink); margin-bottom: 1rem; line-height: 1.15;
+}
+.st-step-body {
+  font-family: var(--sans); font-weight: 300;
+  font-size: clamp(.8rem,1.2vw,.9rem);
+  line-height: 1.75; color: var(--ink-2); max-width: 38ch;
+  margin-bottom: 1.4rem;
+}
+.st-step-link {
+  font-family: var(--sans); font-size: .5rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+  display: inline-flex; align-items: center; gap: .3rem;
+  border-bottom: 1px solid rgba(184,150,106,.25); padding-bottom: 2px;
+  transition: border-color .2s;
+}
+.st-step-link:hover { border-color: var(--gold); }
+
+/* YouTube chapter — graphic treatment */
+.yt-chapter {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+/* Oversized background word */
+.yt-bg-word {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--sans); font-weight: 600;
+  font-size: clamp(12rem, 22vw, 20rem);
+  letter-spacing: -.04em; text-transform: uppercase;
+  color: rgba(184,150,106,.045);
+  white-space: nowrap; pointer-events: none; user-select: none;
+  z-index: 0; line-height: 1;
+}
+/* Chapter header strip */
+.yt-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: clamp(2.5rem,5vw,4rem) clamp(1.5rem,3vw,3rem) 0;
+  position: relative; z-index: 2;
+}
+.yt-chapter-num {
+  font-family: var(--sans); font-weight: 600;
+  font-size: clamp(4rem,8vw,7rem);
+  line-height: 1; letter-spacing: -.04em;
+  color: rgba(184,150,106,.18); flex-shrink: 0;
+}
+.yt-header-right {
+  text-align: right;
+}
+.yt-label {
+  font-family: var(--sans); font-size: .48rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  display: block; margin-bottom: .5rem;
+}
+.yt-venue {
+  font-family: var(--sans); font-size: .42rem; font-weight: 400;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-3); display: block;
+}
+/* Main title block */
+.yt-title-block {
+  padding: clamp(1.5rem,3vw,2.5rem) clamp(1.5rem,3vw,3rem);
+  position: relative; z-index: 2;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 2rem; flex-wrap: wrap;
+}
+.yt-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2.2rem,5vw,4.2rem);
+  color: var(--ink); line-height: 1.05; letter-spacing: -.01em;
+  flex: 1; min-width: 0;
+}
+.yt-title em { color: var(--gold-lt); font-style: italic; }
+.yt-title-meta {
+  font-family: var(--sans); font-size: .42rem; font-weight: 400;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+  white-space: nowrap; padding-bottom: .4rem;
+}
+/* Video frame with film corners */
+.yt-frame-outer {
+  padding: 0 clamp(1.5rem,3vw,3rem) clamp(2.5rem,5vw,4rem);
+  position: relative; z-index: 2;
+}
+.yt-frame-inner {
+  position: relative;
+}
+/* Film-frame corner marks */
+.yt-frame-inner::before,
+.yt-frame-inner::after,
+.yt-frame-corner-bl,
+.yt-frame-corner-br {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  z-index: 3; pointer-events: none;
+}
+.yt-frame-inner::before {
+  top: -6px; left: -6px;
+  border-top: 1px solid var(--gold); border-left: 1px solid var(--gold);
+}
+.yt-frame-inner::after {
+  top: -6px; right: -6px;
+  border-top: 1px solid var(--gold); border-right: 1px solid var(--gold);
+}
+.yt-frame-corner-bl {
+  bottom: -6px; left: -6px;
+  border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold);
+}
+.yt-frame-corner-br {
+  bottom: -6px; right: -6px;
+  border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold);
+}
+.yt-embed-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0; overflow: hidden;
+}
+.yt-embed-wrap iframe {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; border: none; display: block;
+}
+/* Caption strip below video */
+.yt-caption-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .8rem 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 0;
+}
+.yt-caption-text {
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(.78rem,1.1vw,.9rem); color: var(--ink-3); line-height: 1.5;
+}
+.yt-caption-tag {
+  font-family: var(--sans); font-size: .42rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+  flex-shrink: 0; white-space: nowrap;
+}
+
+/* WebGL gallery */
+.st-sticky--gallery { position: sticky; padding: 0; }
+#webgl-gallery-canvas {
+  position: absolute;
+  inset: 0; width: 100%; height: 100%;
+  display: block;
+}
+.st-gallery-label {
+  position: absolute; bottom: 2rem; left: 2rem;
+  font-family: var(--sans); font-size: .44rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(221,213,194,.35); z-index: 2; pointer-events: none;
+}
+.st-gallery-progress {
+  position: absolute; bottom: 2rem; right: 2rem;
+  font-family: var(--sans); font-size: .42rem;
+  letter-spacing: .14em; color: rgba(221,213,194,.25);
+  z-index: 2; pointer-events: none;
+}
+
+/* Domain watermark — large ambient bg text in statement sticky */
+.st-domain-wm {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-weight: 600;
+  font-size: clamp(5rem, 11vw, 9.5rem);
+  letter-spacing: -.03em; text-transform: uppercase;
+  color: rgba(184,150,106,.05);
+  pointer-events: none; user-select: none;
+  transition: color .8s ease, opacity .8s ease;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+/* Step progress dots — left edge of statement sticky */
+.st-progress-dots {
+  position: absolute; left: 1.4rem; top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: .55rem;
+  z-index: 3;
+}
+.st-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--ink-3);
+  transition: background .35s, transform .35s;
+}
+.st-dot.active { background: var(--gold); transform: scale(1.6); }
+
+/* Domain accent bar below section label */
+.st-domain-bar {
+  width: 2rem; height: 2px;
+  background: var(--gold);
+  margin: .8rem 0 1.4rem;
+  transition: background .6s ease, width .4s ease;
+}
+
+/* Hero scroll indicator */
+.hero-scroll {
+  position: absolute; bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 4; display: flex; flex-direction: column;
+  align-items: center; gap: .5rem;
+  opacity: 0; transition: opacity .6s;
+  pointer-events: none;
+}
+.hero-scroll.vis { opacity: 1; }
+.hero-scroll-label {
+  font-family: var(--sans); font-size: .38rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(221,213,194,.4);
+}
+.hero-scroll-line {
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, rgba(184,150,106,.7), transparent);
+  animation: scrollPulse 1.8s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%, 100% { opacity: .45; transform: scaleY(.9); }
+  50% { opacity: 1; transform: scaleY(1.15); }
+}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 900px) {
+  /* Scrollytelling responsive */
+  .st-scroll-container { flex-direction: column; }
+  .st-sticky {
+    position: relative; width: 100%; height: 55vw; min-height: 260px;
+    border-right: none; border-bottom: 1px solid var(--line);
+  }
+  .st-steps { width: 100%; }
+  .st-step:first-child { margin-top: 0; }
+  .st-step:last-child { margin-bottom: 0; }
+  .st-phrase { clip-path: none !important; }
+  .st-phrase.revealed { clip-path: none; }
+  .yt-embed-wrap { max-width: 100%; }
+}
+@media (max-width: 900px) {
+  #hero { min-height: 100svh; }
+  .hero-left { max-width: 100%; }
+  .hero-meta { grid-template-columns: repeat(2,1fr); gap: 1.2rem 0; }
+  /* nav responsive handled by nav.css */
+  .ed-statement { grid-template-columns: 1fr; gap: 1.5rem; }
+  .ed-statement-col { border-right: none; border-bottom: 1px solid var(--line); padding-right: 0; padding-bottom: 1.5rem; }
+  .ed-spread { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; }
+  .ed-img--primary { grid-column: 1/3; grid-row: 1; aspect-ratio: 16/9; border-right: none; border-bottom: 1px solid var(--line); }
+  .ed-img--secondary { grid-column: 1; grid-row: 2; border-right: 1px solid var(--line); }
+  .ed-img--tertiary { grid-column: 2; grid-row: 2; }
+  .ed-img--caption { grid-column: 1/3; grid-row: 3; flex-direction: column; }
+  .ed-pull { grid-template-columns: 1fr; }
+  .ed-pull-left { border-right: none; border-bottom: 1px solid var(--line); }
+  .ed-research { grid-template-columns: 1fr; }
+  .ed-research-label-col { border-right: none; border-bottom: 1px solid var(--line); }
+  .featured-work { grid-template-columns: 1fr; }
+  .fw-image { border-right: none; border-bottom: 1px solid var(--line); }
+  .work-row { grid-template-columns: 1fr auto; }
+  .work-row-num { display: none; }
+  .work-row-year { display: none; }
+  #contact { grid-template-columns: 1fr; }
+  .contact-left { border-right: none; border-bottom: 1px solid var(--line); }
+  #footer { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .ed-spread { grid-template-columns: 1fr; }
+  .ed-img--primary, .ed-img--secondary, .ed-img--tertiary { grid-column: 1; }
+  .ed-img--primary { grid-row: 1; }
+  .ed-img--secondary { grid-row: 2; border-right: none; border-bottom: 1px solid var(--line); }
+  .ed-img--tertiary { grid-row: 3; border-bottom: 1px solid var(--line); }
+  .ed-img--caption { grid-row: 4; grid-column: 1; }
+}
+body.no-scroll { overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+
+<!-- PAGE TRANSITION -->
+<div id="page-transition"></div>
+
+<!-- NAV injected by nav.js -->
+<div id="nav-placeholder"></div>
+
+<!-- CURSOR PREVIEW -->
+<div class="row-preview" id="row-preview">
+  <img id="preview-img" alt="">
+</div>
+
+<!-- ═══════════════════════════════════════════
+  HERO
+═══════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg">
+    <img id="hero-img" src="images/hero/mashrou-leila-baalbeck.jpg"
+         alt="Mashrou' Leila — Baalbeck International Festival" loading="eager">
+  </div>
+  <p class="hero-caption">Mashrou' Leila — Baalbeck Festival, Lebanon</p>
+  <div class="hero-scroll" id="hero-scroll">
+    <span class="hero-scroll-label">Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+  <div class="hero-left">
+    <p class="hero-eyebrow" id="hero-eyebrow">Creative Systems Architect</p>
+    <div class="hero-name">
+      <span class="hero-first" id="hero-first">Haig</span>
+      <span class="hero-last" id="hero-last">PAPAZIAN</span>
+    </div>
+    <p class="hero-sub" id="hero-sub">
+      Sound, space, code, text, image, systems —
+      fourteen years building cultural infrastructure
+      from Beirut to the Metropolitan Museum.
+    </p>
+    <div class="hero-cta" id="hero-cta">
+      <a href="works.html" class="hero-cta-btn hero-cta-btn--primary">View All Work →</a>
+      <a href="atlas-3d.html" class="hero-cta-btn hero-cta-btn--secondary">Enter the Atlas</a>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-meta-item" id="hm-0">
+        <div class="hero-meta-label">Based in</div>
+        <div class="hero-meta-value">New York, NY</div>
+      </div>
+      <div class="hero-meta-item" id="hm-1">
+        <div class="hero-meta-label">Studio</div>
+        <div class="hero-meta-value">Walaw Studio</div>
+      </div>
+      <div class="hero-meta-item" id="hm-2">
+        <div class="hero-meta-label">Streams</div>
+        <div class="hero-meta-value">500M+</div>
+      </div>
+      <div class="hero-meta-item" id="hm-3">
+        <div class="hero-meta-label">Active since</div>
+        <div class="hero-meta-value">2008</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="masthead">
+  <span class="masthead-item">Vol. XIV · 2008–2026</span>
+  <div class="masthead-divider"></div>
+  <span class="masthead-center">Sound · Space · Code · Text · Image · Systems</span>
+  <div class="masthead-divider"></div>
+  <span class="masthead-item">Walaw Studio · New York</span>
+</div>
+
+<!-- ═══════════════════════════════════════════
+  EDITORIAL — scrollytelling
+═══════════════════════════════════════════ -->
+<section id="editorial">
+
+  <!-- ── ACT 1: Statement Reveal ── -->
+  <div class="st-scroll-container" id="st-statement">
+    <div class="st-sticky">
+      <div class="st-domain-wm" id="st-domain-wm">Sound</div>
+      <div class="st-progress-dots" id="st-dots-statement"></div>
+      <div class="st-statement-sticky">
+        <span class="section-num">01 / The Work</span>
+        <div class="st-domain-bar" id="st-domain-bar"></div>
+        <span class="st-phrase" id="stp-0">I work across</span>
+        <span class="st-phrase" id="stp-1">six domains —</span>
+        <span class="st-phrase" id="stp-2">not as a portfolio,</span>
+        <span class="st-phrase" id="stp-3">but as one</span>
+        <span class="st-phrase" id="stp-4"><em>continuous inquiry</em></span>
+        <span class="st-phrase" id="stp-5">into how meaning</span>
+        <span class="st-phrase" id="stp-6">is built.</span>
+      </div>
+    </div>
+    <div class="st-steps" id="st-steps-statement">
+      <div class="st-step" data-step="0">
+        <div>
+          <span class="st-step-domain" style="color:var(--sound)">Sound</span>
+          <h3 class="st-step-title">Fourteen years, forty countries</h3>
+          <p class="st-step-body">Mashrou' Leila. 500M+ streams. The first Middle Eastern act on the Rolling Stone cover. Sound as political infrastructure.</p>
+        </div>
+      </div>
+      <div class="st-step" data-step="1">
+        <div>
+          <span class="st-step-domain" style="color:var(--space)">Space</span>
+          <h3 class="st-step-title">Venues as instruments</h3>
+          <p class="st-step-body">MEKENA NYC. The Space Time Tuning Machine. Rooms designed not for occupation but for listening — to architecture, to each other.</p>
+        </div>
+      </div>
+      <div class="st-step" data-step="2">
+        <div>
+          <span class="st-step-domain" style="color:var(--code)">Code</span>
+          <h3 class="st-step-title">Systems that ask questions</h3>
+          <p class="st-step-body">427+ tracks generated and annotated. The Localization Gap: red-teaming AI music systems for Arabic maqam erasure. Not optimization — investigation.</p>
+        </div>
+      </div>
+      <div class="st-step" data-step="3">
+        <div>
+          <span class="st-step-domain" style="color:var(--text-c)">Text</span>
+          <h3 class="st-step-title">Language as architecture</h3>
+          <p class="st-step-body">The Cartography of Absence. 28,000 words of autofiction. The New York Times. Writing as a spatial act — mapping what cannot be said directly.</p>
+        </div>
+      </div>
+      <div class="st-step" data-step="4">
+        <div>
+          <span class="st-step-domain" style="color:var(--image)">Image</span>
+          <h3 class="st-step-title">Documentation as counter-archive</h3>
+          <p class="st-step-body">Tour photography across MENA, Europe, the Americas. A visual record of a band systematically banned across the region it came from.</p>
+        </div>
+      </div>
+      <div class="st-step" data-step="5">
+        <div>
+          <span class="st-step-domain" style="color:var(--systems)">Systems</span>
+          <h3 class="st-step-title">Walaw Studio</h3>
+          <p class="st-step-body">The practice that connects all of this. AI + culture research, spatial design, creative direction — built to reach the jaw-dropping territory.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── YouTube Chapter ── -->
+  <div class="yt-chapter" id="yt-chapter">
+    <div class="yt-bg-word" aria-hidden="true">مشروع ليلى</div>
+
+    <div class="yt-header">
+      <div class="yt-chapter-num" aria-hidden="true">02</div>
+      <div class="yt-header-right">
+        <span class="yt-label">Music Video</span>
+        <span class="yt-venue">Mashrou' Leila · 500M+ Streams</span>
+      </div>
+    </div>
+
+    <div class="yt-title-block">
+      <h3 class="yt-title">Mashrou' Leila<br><em>Radio Romance</em></h3>
+      <span class="yt-title-meta">The band that<br>built the practice</span>
+    </div>
+
+    <div class="yt-frame-outer">
+      <div class="yt-frame-inner">
+        <div class="yt-frame-corner-bl"></div>
+        <div class="yt-frame-corner-br"></div>
+        <div class="yt-embed-wrap">
+          <iframe src="https://www.youtube.com/embed/OpbC_XZQNQ8"
+                  title="Mashrou' Leila — Radio Romance"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+        </div>
+        <div class="yt-caption-strip">
+          <span class="yt-caption-text">14 years. 40 countries. The counter-public built from sound.</span>
+          <span class="yt-caption-tag">مشروع ليلى</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACT 2: WebGL Domain Gallery ── -->
+  <div class="st-scroll-container" id="st-gallery">
+    <div class="st-sticky st-sticky--gallery">
+      <canvas id="webgl-gallery-canvas"></canvas>
+      <div class="st-gallery-label" id="st-gallery-label">Sound</div>
+      <div class="st-gallery-progress" id="st-gallery-progress">01 / 06</div>
+    </div>
+    <div class="st-steps" id="st-steps-gallery">
+      <div class="st-step" data-step="0" data-domain="sound"
+           data-img="images/hero/mashrou-leila.jpg"
+           data-fallback="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--sound)">Sound · 2008–2022</span>
+          <h3 class="st-step-title">Mashrou' Leila</h3>
+          <p class="st-step-body">14 years. 40+ countries. 500M+ streams. A counter-public built from sound, protest, and architectural thinking.</p>
+          <a href="projects/mashrou-leila.html" class="st-step-link">Open project →</a>
+        </div>
+      </div>
+      <div class="st-step" data-step="1" data-domain="space"
+           data-img="images/hero/space-time-tuning-machine.jpg"
+           data-fallback="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--space)">Space · 2020–2022</span>
+          <h3 class="st-step-title">Space Time Tuning Machine</h3>
+          <p class="st-step-body">Spatial sound installations at SXSW and The Broad Museum. Rooms designed to tune noise into melody, melody into silence.</p>
+          <a href="projects/space-time-tuning-machine.html" class="st-step-link">Open project →</a>
+        </div>
+      </div>
+      <div class="st-step" data-step="2" data-domain="code"
+           data-img="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--code)">Code · 2024</span>
+          <h3 class="st-step-title">The Localization Gap Audit</h3>
+          <p class="st-step-body">427+ tracks generated and annotated. Red-teaming Suno, Udio, and MusicLM for Arabic maqam erasure. Dataset monoculture as cultural violence.</p>
+          <a href="projects/localization-gap-audit.html" class="st-step-link">Open project →</a>
+        </div>
+      </div>
+      <div class="st-step" data-step="3" data-domain="text"
+           data-img="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--text-c)">Text · 2025</span>
+          <h3 class="st-step-title">The Cartography of Absence</h3>
+          <p class="st-step-body">28,000 words of autofiction. Memory as architecture. Writing that maps what cannot be said directly — the shape of exile.</p>
+          <a href="projects/cartography-of-absence.html" class="st-step-link">Open project →</a>
+        </div>
+      </div>
+      <div class="st-step" data-step="4" data-domain="image"
+           data-img="images/hero/mashrou-leila-baalbeck.jpg"
+           data-fallback="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--image)">Image · 2008–2022</span>
+          <h3 class="st-step-title">Tour Archive — MENA &amp; Beyond</h3>
+          <p class="st-step-body">Visual record of a band systematically banned across the region it came from. Documentation as counter-archive, across 40 countries.</p>
+          <a href="works.html" class="st-step-link">Explore archive →</a>
+        </div>
+      </div>
+      <div class="st-step" data-step="5" data-domain="systems"
+           data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80">
+        <div>
+          <span class="st-step-domain" style="color:var(--systems)">Systems · 2023–</span>
+          <h3 class="st-step-title">MEKENA NYC</h3>
+          <p class="st-step-body">Artist residency and cultural infrastructure in Queens. Built for the musicians, writers, and builders who don't have a room yet.</p>
+          <a href="projects/mekena-nyc.html" class="st-step-link">Open project →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Research ── -->
+  <div class="ed-research">
+    <div class="ed-research-label-col">
+      <div>
+        <div class="ed-research-eyebrow reveal">Current Research</div>
+        <h3 class="ed-research-title reveal reveal-delay-1">The Localization Gap</h3>
+      </div>
+      <a href="works.html" class="ed-research-link reveal reveal-delay-2">
+        All works →
+      </a>
+    </div>
+    <div class="ed-research-body-col">
+      <p class="ed-research-p reveal">
+        AI music systems — Suno, Udio, MusicLM — default to Western harmonic frameworks.
+        <strong>Arabic maqam systems,</strong> microtonal structures, and non-Western resolution logic
+        are systematically erased. Not through malice. Through dataset monoculture.
+      </p>
+      <p class="ed-research-p reveal reveal-delay-1">
+        427+ tracks generated and annotated via Python API pipelines.
+        The question isn't whether the models can generate Arabic music —
+        it's whether they can generate <strong>the actual thing,</strong>
+        or only its Western approximation.
+      </p>
+      <p class="ed-research-p reveal reveal-delay-2">
+        This is the intellectual spine of <strong>Walaw Studio</strong>
+        and the reason the portfolio exists as a spatial system
+        rather than a list of deliverables.
+      </p>
+      <a href="atlas-3d.html" class="ed-research-link reveal reveal-delay-3">
+        Explore the constellation atlas →
+      </a>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════
+  SELECTED WORKS
+═══════════════════════════════════════════ -->
+<section id="works">
+  <div class="works-header">
+    <div>
+      <span class="section-num">02 / Selected Works</span>
+      <span class="works-eyebrow reveal">Archive</span>
+      <h2 class="works-title reveal reveal-delay-1">Fourteen years. Six domains.</h2>
+    </div>
+    <a href="works.html" class="works-view-all reveal reveal-delay-2">View all 74 works →</a>
+  </div>
+
+  <!-- Featured -->
+  <a href="projects/mashrou-leila.html" class="featured-work">
+    <div class="fw-image">
+      <img data-src="images/hero/mashrou-leila.jpg"
+           data-fallback="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80"
+           alt="Mashrou' Leila">
+    </div>
+    <div class="fw-content">
+      <div>
+        <div class="fw-tag">Sound · Image · Space · Systems · 2008–2022</div>
+        <h3 class="fw-title">Mashrou' Leila</h3>
+        <p class="fw-desc">
+          14 years. 40+ countries. 500M+ streams.
+          A counter-public built from sound, protest,
+          and architectural thinking. Systematically banned
+          across MENA. Still playing everywhere else.
+        </p>
+      </div>
+      <span class="fw-cta">Open project →</span>
+    </div>
+  </a>
+
+  <!-- Works list -->
+  <div class="works-list">
+    <a href="projects/localization-gap-audit.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80">
+      <span class="work-row-num">02</span>
+      <div>
+        <span class="work-row-title">The Localization Gap Audit</span>
+        <div class="work-row-tags">AI Research · Code · Systems</div>
+      </div>
+      <span class="work-row-year">2024</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+    <a href="projects/space-time-tuning-machine.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80">
+      <span class="work-row-num">03</span>
+      <div>
+        <span class="work-row-title">Space Time Tuning Machine</span>
+        <div class="work-row-tags">Sound · Space · Systems</div>
+      </div>
+      <span class="work-row-year">2020–2022</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+    <a href="projects/cartography-of-absence.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=600&q=80">
+      <span class="work-row-num">04</span>
+      <div>
+        <span class="work-row-title">The Cartography of Absence</span>
+        <div class="work-row-tags">Text · Autofiction · 28,000 words</div>
+      </div>
+      <span class="work-row-year">2025</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+    <a href="projects/kardia-system.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80">
+      <span class="work-row-num">05</span>
+      <div>
+        <span class="work-row-title">Kardia — Somatic Synthesizer</span>
+        <div class="work-row-tags">Code · Sound · Systems</div>
+      </div>
+      <span class="work-row-year">2026</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+    <a href="projects/mekena-nyc.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80">
+      <span class="work-row-num">06</span>
+      <div>
+        <span class="work-row-title">MEKENA NYC</span>
+        <div class="work-row-tags">Space · Systems · Artist Residency, Queens</div>
+      </div>
+      <span class="work-row-year">2023–</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+    <a href="writing/cost-of-being-queer-and-arab.html" class="work-row"
+       data-img="https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=600&q=80">
+      <span class="work-row-num">07</span>
+      <div>
+        <span class="work-row-title">The Cost of Being Queer and Arab</span>
+        <div class="work-row-tags">Text · The New York Times</div>
+      </div>
+      <span class="work-row-year">2019</span>
+      <span class="work-row-arrow">→</span>
+    </a>
+  </div>
+
+  <div class="works-atlas-cta">
+    <p class="wac-text">
+      74 works across 14 years — connected by invisible logic.
+      The atlas maps what a list cannot.
+    </p>
+    <a href="atlas-3d.html" class="wac-link">Enter the Atlas →</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+  CONTACT
+═══════════════════════════════════════════ -->
+<section id="contact">
+  <div class="contact-left">
+    <div>
+      <span class="contact-issue">03 / The Studio</span>
+      <h2 class="contact-title reveal">
+        Let's build<br>something<br>that holds.
+      </h2>
+      <p class="contact-sub reveal reveal-delay-1">
+        Open to creative director roles, AI + culture research,
+        residency programs, and commissions that sit at the edge
+        of what a discipline is supposed to do.
+      </p>
+    </div>
+    <a href="mailto:haig@walaw.studio" class="contact-email reveal reveal-delay-2">
+      haig@walaw.studio
+    </a>
+  </div>
+  <div class="contact-right">
+    <a href="https://linkedin.com/in/haigpapazian" target="_blank" rel="noopener"
+       class="contact-link">
+      <div>
+        <div class="cl-label">LinkedIn</div>
+        <div class="cl-value">haigpapazian</div>
+      </div>
+      <span class="cl-arrow">↗</span>
+    </a>
+    <a href="https://github.com/haigpapa" target="_blank" rel="noopener"
+       class="contact-link">
+      <div>
+        <div class="cl-label">GitHub</div>
+        <div class="cl-value">haigpapa</div>
+      </div>
+      <span class="cl-arrow">↗</span>
+    </a>
+    <a href="atlas-3d.html" class="contact-link">
+      <div>
+        <div class="cl-label">Spatial archive</div>
+        <div class="cl-value">The Constellation Atlas</div>
+      </div>
+      <span class="cl-arrow">→</span>
+    </a>
+    <a href="writing.html" class="contact-link">
+      <div>
+        <div class="cl-label">Essays &amp; longform</div>
+        <div class="cl-value">Writing</div>
+      </div>
+      <span class="cl-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <span class="footer-left">© 2026 Haig Papazian · Walaw Studio · New York</span>
+  <span class="footer-colophon">Designed &amp; written by Haig Papazian · Vol. XIV · Six domains, one inquiry</span>
+</footer>
+
+<script>
+/* ── CURSOR ──────────────────────────────────── */
+const cursor = document.getElementById('cursor');
+let mx = 0, my = 0, cx = 0, cy = 0;
+window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function moveCursor() {
+  cx += (mx - cx) * .18; cy += (my - cy) * .18;
+  cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px';
+  requestAnimationFrame(moveCursor);
+})();
+document.querySelectorAll('a, button, .contact-link').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+/* ── NAV SCROLL + HERO SCROLL INDICATOR ─────── */
+const nav = document.getElementById('nav');
+const heroScrollEl = document.getElementById('hero-scroll');
+window.addEventListener('scroll', () => {
+  nav?.classList.toggle('scrolled', window.scrollY > 40);
+  heroScrollEl?.classList.toggle('vis', window.scrollY < 80);
+}, { passive: true });
+
+/* ── HAMBURGER ──────────────────────────────── */
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+const mobileClose = document.getElementById('mobile-close');
+hamburger?.addEventListener('click', () => { mobileMenu.classList.add('open'); document.body.classList.add('no-scroll'); });
+mobileClose?.addEventListener('click', () => { mobileMenu.classList.remove('open'); document.body.classList.remove('no-scroll'); });
+
+/* ── HERO ENTRANCE ──────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  const heroImg = document.getElementById('hero-img');
+  if (heroImg) {
+    const reveal = () => heroImg.classList.add('loaded');
+    if (heroImg.complete) reveal();
+    else heroImg.addEventListener('load', reveal);
+  }
+
+  function heroIn(id, delay) {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) { el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.4,0,.2,1)'; el.style.opacity = 1; el.style.transform = 'none'; }
+    }, delay);
+  }
+  heroIn('hero-eyebrow', 200);
+  heroIn('hero-first', 380);
+  heroIn('hero-last', 500);
+  heroIn('hero-sub', 680);
+  heroIn('hero-cta', 800);
+  ['hm-0','hm-1','hm-2','hm-3'].forEach((id, i) => heroIn(id, 960 + i * 80));
+  setTimeout(() => { document.getElementById('hero-scroll')?.classList.add('vis'); }, 1600);
+});
+
+/* ── LAZY IMAGES ────────────────────────────── */
+document.querySelectorAll('img[data-src]').forEach(img => {
+  const load = () => {
+    const src = img.dataset.src;
+    const fallback = img.dataset.fallback;
+    const tmp = new Image();
+    tmp.onload = () => { img.src = tmp.src; img.classList.add('loaded'); };
+    tmp.onerror = () => {
+      if (fallback) {
+        const tmp2 = new Image();
+        tmp2.onload = () => { img.src = tmp2.src; img.classList.add('loaded'); };
+        tmp2.src = fallback;
+      }
+    };
+    tmp.src = src;
+  };
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { load(); obs.unobserve(img); } });
+  }, { rootMargin: '200px' });
+  obs.observe(img);
+});
+
+/* ── SCROLL REVEALS ─────────────────────────── */
+const reveals = document.querySelectorAll('.reveal');
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); ro.unobserve(e.target); } });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => ro.observe(el));
+
+/* ── CURSOR PREVIEW (works list) ─────────────── */
+const preview = document.getElementById('row-preview');
+const previewImg = document.getElementById('preview-img');
+let previewX = 0, previewY = 0, previewTX = 0, previewTY = 0;
+let previewActive = false;
+
+document.querySelectorAll('.work-row').forEach(row => {
+  const imgUrl = row.dataset.img;
+  row.addEventListener('mouseenter', () => {
+    if (!imgUrl) return;
+    previewImg.style.opacity = 0;
+    const tmp = new Image();
+    tmp.onload = () => { previewImg.src = tmp.src; previewImg.style.opacity = 1; };
+    tmp.src = imgUrl;
+    preview.classList.add('visible');
+    previewActive = true;
+  });
+  row.addEventListener('mouseleave', () => {
+    preview.classList.remove('visible');
+    previewActive = false;
+  });
+});
+window.addEventListener('mousemove', e => {
+  previewTX = e.clientX + 20; previewTY = e.clientY - 92;
+});
+(function movePreview() {
+  previewX += (previewTX - previewX) * .12;
+  previewY += (previewTY - previewY) * .12;
+  preview.style.transform = `translate(${previewX}px,${previewY}px)`;
+  requestAnimationFrame(movePreview);
+})();
+
+/* ── PAGE TRANSITION (BOLD FLASHSWIPE) ───────── */
+const pt = document.getElementById('page-transition');
+document.querySelectorAll('a[href]').forEach(a => {
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('mailto') || href.startsWith('http')) return;
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    pt.style.transition = 'none'; 
+    pt.style.transform = 'translateY(100%)';
+    requestAnimationFrame(() => {
+      pt.style.transition = 'transform .45s cubic-bezier(.86, 0, .07, 1)';
+      pt.style.transform = 'translateY(0%)';
+      setTimeout(() => { window.location.href = href; }, 420);
+    });
+  });
+});
+</script>
+</body>
+</html>
+
+<script src="nav.js"></script>
+<script src="scrollytelling.js"></script>
+<script src="homepage-story.js"></script>

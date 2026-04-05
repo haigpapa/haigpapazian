@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — Haig Papazian</title>
+<meta name="description" content="A map of things built, unbuilt, and still becoming. 74 nodes · 14 years.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- D3 v7 -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<style>
+:root {
+  --bg:      #070706;
+  --ink:     #ddd5c2;
+  --ink-2:   #5e5a55;
+  --ink-3:   #2e2c29;
+  --gold:    #b8966a;
+  --gold-lt: #d4b08a;
+  --line:    #181714;
+  --serif:   'Cormorant Garamond', Georgia, serif;
+  --sans:    'Space Grotesk', system-ui, sans-serif;
+
+  /* domain colors */
+  --sound:   #b8966a;
+  --text:    #5b8a7a;
+  --image:   #9a6b8a;
+  --code:    #4a8a9a;
+  --space:   #7a9a4a;
+  --systems: #7a5a9a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--serif); cursor: none; }
+a { color: inherit; text-decoration: none; }
+
+/* ── CURSOR ─────────────────────────────── */
+#cursor {
+  position: fixed; top: 0; left: 0; width: 8px; height: 8px;
+  background: var(--ink); border-radius: 50%; pointer-events: none;
+  z-index: 9999; transform: translate(-50%,-50%); opacity: .45;
+  transition: width .2s, height .2s, background .2s, border .2s, opacity .2s;
+  mix-blend-mode: difference;
+}
+#cursor.hover { width: 32px; height: 32px; background: transparent; border: 1.5px solid var(--gold); opacity: 1; }
+#cursor.drag  { width: 20px; height: 20px; background: transparent; border: 1.5px solid var(--ink-2); opacity: .8; }
+#cursor-hint {
+  position: fixed; pointer-events: none; z-index: 9998;
+  font-family: var(--sans); font-size: .44rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--gold);
+  transform: translate(-50%, 14px); opacity: 0;
+  transition: opacity .2s; white-space: nowrap;
+}
+#cursor-hint.vis { opacity: 1; }
+
+/* ── PAGE TRANSITION ─────────────────────── */
+#page-transition {
+  position: fixed; inset: 0; background: var(--bg); z-index: 99999; pointer-events: none; transform: translateY(100%);
+}
+#page-transition::after {
+  content: ''; position: absolute; inset: 0; background: var(--gold); transform: translateY(100%);
+}
+
+/* ── SPLASH ──────────────────────────────── */
+#splash {
+  position: fixed; inset: 0; z-index: 800;
+  background: var(--bg); display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 2.5rem; cursor: none;
+}
+.splash-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(2.5rem, 6vw, 5rem); line-height: .92;
+  color: var(--ink); text-align: center; letter-spacing: .04em;
+}
+.splash-sub {
+  font-family: var(--sans); font-weight: 300;
+  font-size: .75rem; color: var(--ink-2); text-align: center;
+  line-height: 1.7; max-width: 38ch;
+}
+.splash-domains {
+  display: flex; gap: 1.5rem; align-items: center;
+}
+.splash-dot {
+  display: flex; align-items: center; gap: .45rem;
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+}
+.splash-dot span { width: 7px; height: 7px; border-radius: 50%; }
+.splash-meta {
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3);
+  text-align: center;
+}
+.splash-cta {
+  font-family: var(--sans); font-size: .58rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-2);
+  border: 1px solid var(--ink-3); padding: .7rem 1.6rem;
+  transition: color .2s, border-color .2s; cursor: none;
+}
+.splash-cta:hover { color: var(--ink); border-color: var(--gold); }
+
+/* ── NAV ─────────────────────────────────── */
+#atlas-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem clamp(1.5rem,3vw,3rem);
+  background: rgba(7,7,6,.88); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s;
+}
+#atlas-nav.vis { opacity: 1; pointer-events: all; }
+.nav-home {
+  font-family: var(--serif); font-weight: 400; font-size: .9rem;
+  letter-spacing: .05em; color: var(--ink-2); transition: color .2s;
+  display: flex; align-items: center; gap: .5rem;
+}
+.nav-home:hover { color: var(--gold-lt); }
+.nav-home .arr { font-size: .8rem; transition: transform .2s; }
+.nav-home:hover .arr { transform: translateX(-3px); }
+
+.domain-filters { display: flex; gap: 0; }
+.df-btn {
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-3); background: none; border: none;
+  padding: .5rem .85rem; cursor: none;
+  transition: color .2s; position: relative;
+}
+.df-btn::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 100%;
+  height: 1px; transition: right .3s cubic-bezier(.4,0,.2,1);
+}
+.df-btn:hover { color: var(--ink-2); }
+.df-btn.active { color: var(--ink); }
+.df-btn.active::after { right: 0; }
+.df-btn[data-domain="all"]::after     { background: var(--gold); }
+.df-btn[data-domain="sound"]::after   { background: var(--sound); }
+.df-btn[data-domain="text"]::after    { background: var(--text); }
+.df-btn[data-domain="image"]::after   { background: var(--image); }
+.df-btn[data-domain="code"]::after    { background: var(--code); }
+.df-btn[data-domain="space"]::after   { background: var(--space); }
+.df-btn[data-domain="systems"]::after { background: var(--systems); }
+
+.nav-exit {
+  font-family: var(--sans); font-size: .52rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-3); background: none; border: none;
+  cursor: none; transition: color .2s; display: flex; align-items: center; gap: .4rem;
+}
+.nav-exit:hover { color: var(--ink); }
+
+/* ── HINT LABEL ──────────────────────────── */
+#drag-hint {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3);
+  pointer-events: none; z-index: 50; transition: opacity .6s;
+}
+
+/* ── CANVAS ──────────────────────────────── */
+#atlas-canvas { position: fixed; inset: 0; cursor: none; }
+
+/* ── MINIMAP ─────────────────────────────── */
+#minimap {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 60;
+  width: 140px; height: 90px; background: rgba(12,11,10,.85);
+  border: 1px solid var(--line); overflow: hidden; opacity: 0;
+  transition: opacity .4s; pointer-events: none;
+}
+#minimap.vis { opacity: 1; }
+#minimap-canvas { width: 100%; height: 100%; }
+#minimap-viewport {
+  position: absolute; border: 1px solid var(--gold);
+  pointer-events: none; opacity: .6;
+}
+
+/* ── NODE PANEL (slide-in) ───────────────── */
+#node-panel {
+  position: fixed; top: 0; right: -520px; bottom: 0;
+  width: 480px; background: rgba(7,7,6,.97);
+  backdrop-filter: blur(20px); border-left: 1px solid var(--line);
+  z-index: 200; transition: right .55s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#node-panel.open { right: 0; }
+
+.panel-close {
+  position: absolute; top: 1.2rem; right: 1.5rem; z-index: 5;
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+  background: none; border: none; cursor: none; transition: color .2s;
+}
+.panel-close:hover { color: var(--ink); }
+
+.panel-img-wrap {
+  width: 100%; aspect-ratio: 16/9; overflow: hidden; flex-shrink: 0;
+  background: var(--bg); position: relative;
+}
+.panel-img-wrap canvas, .panel-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0;
+}
+.panel-img-wrap img { opacity: 0; transition: opacity .7s; }
+
+.panel-body {
+  flex: 1; overflow-y: auto; padding: 2rem 1.75rem;
+  scrollbar-width: none;
+}
+.panel-body::-webkit-scrollbar { display: none; }
+
+.panel-domains {
+  display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.panel-domain-tag {
+  font-family: var(--sans); font-size: .45rem; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase;
+  padding: .2rem .5rem; border-width: 1px; border-style: solid;
+}
+.panel-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.1;
+  color: var(--ink); margin-bottom: .5rem;
+}
+.panel-year {
+  font-family: var(--sans); font-size: .55rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: 1.25rem;
+}
+.panel-desc {
+  font-family: var(--serif); font-weight: 300;
+  font-size: .95rem; line-height: 1.8; color: var(--ink-2);
+  margin-bottom: 2rem;
+}
+.panel-connections {
+  margin-bottom: 2rem;
+}
+.panel-conn-label {
+  font-family: var(--sans); font-size: .48rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: .75rem;
+}
+.panel-conn-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.panel-conn-node {
+  font-family: var(--sans); font-size: .52rem; font-weight: 500;
+  letter-spacing: .1em; color: var(--ink-2);
+  border: 1px solid var(--line); padding: .25rem .6rem;
+  cursor: none; transition: color .2s, border-color .2s; background: none;
+}
+.panel-conn-node:hover { color: var(--gold-lt); border-color: var(--gold); }
+.panel-view-btn {
+  font-family: var(--sans); font-size: .58rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--bg); background: var(--gold); border: none;
+  padding: .75rem 1.5rem; cursor: none; transition: background .2s;
+  display: inline-flex; align-items: center; gap: .5rem;
+}
+.panel-view-btn:hover { background: var(--gold-lt); }
+
+/* ── MOBILE OVERLAY ──────────────────────── */
+#mobile-block {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: var(--bg); align-items: center; justify-content: center;
+  flex-direction: column; gap: 2rem; padding: 2rem; text-align: center;
+}
+@media (max-width: 860px) {
+  #mobile-block { display: flex; }
+  #splash, #atlas-canvas, #atlas-nav, #minimap, #node-panel { display: none !important; }
+}
+.mobile-title { font-family: var(--serif); font-weight: 300; font-size: 2rem; color: var(--ink); }
+.mobile-msg { font-family: var(--sans); font-size: .75rem; color: var(--ink-2); line-height: 1.7; max-width: 30ch; }
+.mobile-btn {
+  font-family: var(--sans); font-size: .6rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-2); border: 1px solid var(--ink-3); padding: .7rem 1.4rem;
+  display: inline-block; transition: color .2s, border-color .2s;
+}
+.mobile-btn:hover { color: var(--ink); border-color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-hint"></div>
+<div id="page-transition"></div>
+
+<!-- MOBILE FALLBACK -->
+<div id="mobile-block">
+  <p class="mobile-title">Atlas</p>
+  <p class="mobile-msg">The constellation view is designed for desktop. On mobile, explore the full archive instead.</p>
+  <a href="works.html" class="mobile-btn">View All Works →</a>
+  <a href="index.html" class="mobile-btn" style="margin-top:-.5rem">← Home</a>
+</div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1 class="splash-title">PAPAZIAN</h1>
+  <p class="splash-sub">A map of things built, unbuilt, and still becoming.</p>
+  <div class="splash-domains">
+    <div class="splash-dot"><span style="background:var(--sound)"></span>Sound</div>
+    <div class="splash-dot"><span style="background:var(--text)"></span>Text</div>
+    <div class="splash-dot"><span style="background:var(--image)"></span>Image</div>
+    <div class="splash-dot"><span style="background:var(--code)"></span>Code</div>
+    <div class="splash-dot"><span style="background:var(--space)"></span>Space</div>
+    <div class="splash-dot"><span style="background:var(--systems)"></span>Systems</div>
+  </div>
+  <p class="splash-meta">74 Nodes · 14 Years</p>
+  <button class="splash-cta" id="splash-enter">Enter the Atlas →</button>
+</div>
+
+<!-- ATLAS NAV -->
+<nav id="atlas-nav">
+  <a href="index.html" class="nav-home"><span class="arr">←</span> Papazian</a>
+  <div class="domain-filters">
+    <button class="df-btn active" data-domain="all">All</button>
+    <button class="df-btn" data-domain="sound">Sound</button>
+    <button class="df-btn" data-domain="text">Text</button>
+    <button class="df-btn" data-domain="image">Image</button>
+    <button class="df-btn" data-domain="code">Code</button>
+    <button class="df-btn" data-domain="space">Space</button>
+    <button class="df-btn" data-domain="systems">Systems</button>
+  </div>
+  <button class="nav-exit" id="nav-exit">× Exit</button>
+</nav>
+
+<!-- DRAG HINT -->
+<div id="drag-hint">Drag to explore  ·  Scroll to zoom</div>
+
+<!-- MAIN CANVAS -->
+<canvas id="atlas-canvas"></canvas>
+
+<!-- MINIMAP -->
+<div id="minimap">
+  <canvas id="minimap-canvas"></canvas>
+  <div id="minimap-viewport"></div>
+</div>
+
+<!-- NODE PANEL -->
+<div id="node-panel">
+  <button class="panel-close" id="panel-close">× Close</button>
+  <div class="panel-img-wrap">
+    <canvas id="panel-canvas" width="480" height="270"></canvas>
+    <img id="panel-img" src="" alt="">
+  </div>
+  <div class="panel-body">
+    <div class="panel-domains" id="panel-domains"></div>
+    <h2 class="panel-title" id="panel-title"></h2>
+    <p class="panel-year" id="panel-year"></p>
+    <p class="panel-desc" id="panel-desc"></p>
+    <div class="panel-connections">
+      <div class="panel-conn-label">Connected Nodes</div>
+      <div class="panel-conn-list" id="panel-connections"></div>
+    </div>
+    <a href="#" class="panel-view-btn" id="panel-view-btn">View Full Project →</a>
+  </div>
+</div>
+
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   DATA
+   ════════════════════════════════════════════════════════════ */
+const DOMAIN_COLORS = {
+  sound:'#b8966a', text:'#5b8a7a', image:'#9a6b8a',
+  code:'#4a8a9a', space:'#7a9a4a', systems:'#7a5a9a'
+};
+
+const NODES = [
+  // TIER 1
+  {id:'mashrou-leila', title:"Mashrou' Leila", domains:['sound','image','space','systems'], year:'2008–2022', tier:1, desc:'14 years. 40+ countries. 500M+ streams. A counter-public built from sound, protest, and architectural thinking. First Middle Eastern act on the Rolling Stone cover.', img:'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80'},
+  {id:'cartography-of-absence', title:'The Cartography of Absence', domains:['text'], year:'2025', tier:1, desc:'Modular dream cycle in bureaucratic forms, exploring displacement. Autofiction manuscript (~28,000 words).', img:'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=600&q=80'},
+  {id:'space-time-tuning-machine', title:'Space Time Tuning Machine', domains:['sound','space','systems'], year:'2020–2022', tier:1, desc:'An instrument played in reverse — tuning noises into sounds, melodies, and silence. Premiered at SXSW and The Broad Museum.', img:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'},
+  // TIER 2
+  {id:'localization-gap-audit', title:'Localization Gap Audit', domains:['code','sound','systems'], year:'2024', tier:2, desc:'427+ tracks generated via Python pipelines. Red-teaming Suno, Udio, and MusicLM for Arabic maqam erasure.', img:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80'},
+  {id:'kardia-system', title:'Kardia', domains:['code','sound','systems'], year:'2026', tier:2, desc:'Mobile biofeedback instrument transforming heart rate into sound via the Iso-Principle.', img:'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80'},
+  {id:'lede-nyc', title:'Lede.nyc', domains:['code','systems'], year:'2025', tier:2, desc:'Autonomous civic intelligence engine for NYC — zero editorial intervention.', img:'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80'},
+  {id:'mekena-nyc-initiative', title:'MEKENA NYC', domains:['space','systems'], year:'2023', tier:2, desc:'Artist residency in Queens. Infrastructure for experimental and interdisciplinary practice.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'sometimes-i-wake-up-elsewhere', title:'Sometimes I Wake Up Elsewhere', domains:['sound','space','text'], year:'2022', tier:2, desc:'Autofiction manuscript. ~28,000 words. Dream cycle exploring displacement and ordinary presence.', img:'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=600&q=80'},
+  {id:'crane-song', title:'The Crane Song', domains:['text'], year:'2024', tier:2, desc:'~10,000 words. Lebanese-Armenian exile encounters a broken AI bird from a virtual Beirut.', img:'https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?w=600&q=80'},
+  {id:'colors-baby', title:'Colors Baby', domains:['image','sound'], year:'2024', tier:2, desc:'AI music video using Suno, Sora, Kling, Veo, and Minimax.', img:'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80'},
+  {id:'walaw-studio', title:'Walaw Studio', domains:['systems'], year:'2023', tier:2, desc:'Cultural strategy practice. Named for و (waw) as waveform, heartbeat, hook.', img:'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80'},
+  {id:'derive-engine', title:'DERIVE', domains:['code','systems'], year:'2024', tier:2, desc:'Drift/navigation framework. Meaning Stack Architecture.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'hah-was-sieve', title:'HAH-WAS', domains:['code','systems'], year:'2024', tier:2, desc:'Sieve/filter system. Meaning Stack Architecture.', img:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80'},
+  {id:'storylines-graph', title:'STORYLINES', domains:['code','text'], year:'2024', tier:2, desc:'Graph-based narrative tool. Stories as navigable networks.', img:'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&q=80'},
+  {id:'3d-beat-synth', title:'3D-Beat-Synth', domains:['code','sound'], year:'2024', tier:2, desc:'3D beat synthesis. Audio-visual instrument built in the browser.', img:'https://images.unsplash.com/photo-1536852841012-1d10af86ae26?w=600&q=80'},
+  {id:'music-engines', title:'music-engines', domains:['code','sound','systems'], year:'2024', tier:2, desc:'AI music research on maqam/Arabic localization gaps.', img:'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80'},
+  {id:'loop-corridor', title:'Loop Corridor', domains:['code','space'], year:'2024', tier:2, desc:'Meditative art game. Bureaucratic purgatory corridors that mutate across loops.', img:'https://images.unsplash.com/photo-1550438089-3d4be7c8a7cc?w=600&q=80'},
+  {id:'codeverse-explorer', title:'Codeverse Explorer', domains:['code','space'], year:'2024', tier:2, desc:'Spatial computing interface for code architecture. Acetate-layer depth navigation.', img:'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&q=80'},
+  // TIER 3 (selected)
+  {id:'photon-plus', title:'Photon+', domains:['code','sound'], year:'2024', tier:3, desc:'Digital twin of Space Time Tuning Machine. Grid-based browser instrument.', img:'https://images.unsplash.com/photo-1579403124614-197f69d8187b?w=600&q=80'},
+  {id:'systems-choreography', title:'Choreography of Systems', domains:['systems'], year:'2024', tier:3, desc:'Core conceptual framework. Treating disciplines as choreography.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'ai-music-archive', title:'AI Music Catalog', domains:['code','sound'], year:'2024', tier:3, desc:'401-track AI-assisted catalog with Notion/Excel taxonomy.', img:'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80'},
+  {id:'cost-of-queer-arab', title:'Cost of Being Queer and Arab', domains:['text'], year:'2019', tier:3, desc:'Op-Ed, The New York Times.', img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'},
+  {id:'rolling-stone-cover', title:'Rolling Stone Cover', domains:['image','sound'], year:'2019', tier:3, desc:'First Middle Eastern act on the Rolling Stone cover.', img:'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80'},
+  {id:'harmonic-field-research', title:'The Harmonic Field', domains:['sound','code'], year:'2024', tier:3, desc:'Spatial harmonics research — architectural acoustics meets generative music.', img:'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=600&q=80'},
+  {id:'resonance-atlas', title:'Resonance Atlas', domains:['sound','systems'], year:'2024', tier:3, desc:'Cartographic mapping of sonic territories.', img:'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80'},
+  {id:'architecture-in-low-res', title:'Architecture in Low-Res', domains:['space','image'], year:'2023', tier:3, desc:'Research on compressed representations of built space.', img:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80'},
+  {id:'menara-infrastructure', title:'Menara Infrastructure', domains:['space','systems'], year:'2022', tier:3, desc:'Infrastructural logic of minaret architecture as communication technology.', img:'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=600&q=80'},
+  {id:'ghost-city-sculpture', title:'Ghost City', domains:['space','image'], year:'2021', tier:3, desc:'Phantom presence of demolished urban fabric.', img:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80'},
+  {id:'the-labyrinth', title:'The Labyrinth', domains:['space','code'], year:'2022', tier:3, desc:'Procedural spatial narrative — labyrinth generated from cultural memory data.', img:'https://images.unsplash.com/photo-1550438089-3d4be7c8a7cc?w=600&q=80'},
+  {id:'the-forgery', title:'The Forgery', domains:['image','text'], year:'2023', tier:3, desc:'Authenticity, reproduction, and ethics of visual citation in the AI age.', img:'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&q=80'},
+  {id:'caspian-mare-drift', title:'Caspian Mare Drift', domains:['sound','space'], year:'2021', tier:3, desc:'Ambient composition — acoustic geography of the Caspian region.', img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80'},
+  {id:'project-agora', title:'Project Agora', domains:['space','systems'], year:'2020', tier:3, desc:'Civic space as programmable infrastructure for community assembly.', img:'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80'},
+  {id:'bureaucratic-surrealism', title:'Bureaucratic Surrealism', domains:['text','systems'], year:'2023', tier:3, desc:'Administrative language as the primary material for surrealist narrative.', img:'https://images.unsplash.com/photo-1590608897129-79da98d15969?w=600&q=80'},
+  {id:'mobius-engine', title:'Möbius Engine', domains:['code','sound'], year:'2023', tier:3, desc:'Looping audio engine that inverts its own structure.', img:'https://images.unsplash.com/photo-1536852841012-1d10af86ae26?w=600&q=80'},
+  {id:'souad-novella', title:'Souad (Novella)', domains:['text'], year:'2022', tier:3, desc:'Diaspora identity through a Lebanese grandmother navigating Queens.', img:'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600&q=80'},
+  {id:'tebr-project', title:'Tebr Project', domains:['sound','image'], year:'2021', tier:3, desc:'The tebr/lute as carrier of diasporic memory across Lebanese-Armenian borderlands.', img:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'},
+  {id:'99-nodes', title:'99 Nodes', domains:['code','systems'], year:'2025', tier:3, desc:'Portfolio as spatial system — 74 works across 14 years.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'meaning-stack', title:'The Meaning Stack', domains:['systems','code'], year:'2024', tier:3, desc:'Architecture for how meaning is constructed across layers.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'subtractive-composition', title:'Subtractive Composition', domains:['sound','systems'], year:'2023', tier:3, desc:'Music as excavation. Basinski → Caretaker → Oliveros → King Tubby.', img:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'},
+  {id:'impossible-futures', title:'Impossible Futures', domains:['systems','text'], year:'2024', tier:3, desc:'Framework for designing toward structurally blocked futures.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'diagonal-logic', title:'Diagonal Logic', domains:['systems','text'], year:'2024', tier:3, desc:'Working across disciplines at angles — finding connective tissue.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'arabic-maqam-research', title:'Arabic Maqam Research', domains:['sound','text','code'], year:'2023', tier:3, desc:'Foundational research into maqam systems and Western AI failure modes.', img:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'},
+  {id:'ibn-el-leil-visuals', title:'Ibn El Leil — Visual Universe', domains:['image','sound'], year:'2015', tier:3, desc:'Visual identity and art direction for Mashrou\' Leila\'s landmark album.', img:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80'},
+  {id:'baalbeck-festival', title:'Baalbeck International Festival', domains:['space','sound','image'], year:'2017', tier:3, desc:'Stage design and spatial architecture at Baalbeck International Festival, Lebanon.', img:'https://images.unsplash.com/photo-1501386761578-eaa54b915e8f?w=600&q=80'},
+  {id:'barbican-performance', title:'Barbican Centre, London', domains:['space','sound'], year:'2018', tier:3, desc:'Full-production concert at Barbican Centre. Architectural staging.', img:'https://images.unsplash.com/photo-1501386761578-eaa54b915e8f?w=600&q=80'},
+  {id:'met-vessel-orchestra', title:'MET Vessel / Orchestra', domains:['space','sound'], year:'2019', tier:3, desc:'Spatial sound at the Metropolitan Museum of Art.', img:'https://images.unsplash.com/photo-1501386761578-eaa54b915e8f?w=600&q=80'},
+  {id:'yo-yo-ma-collab', title:'Yo-Yo Ma Collaboration', domains:['sound','space'], year:'2019', tier:3, desc:'Bringing Mashrou\' Leila into dialogue with Western classical tradition.', img:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'},
+  {id:'sundance-fellowship', title:'Sundance Institute', domains:['systems'], year:'2023', tier:3, desc:'Art of Practice Fellow.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'ashkal-alwan-fellowship', title:'Ashkal Alwan Fellowship', domains:['systems','space'], year:'2016', tier:3, desc:'Fellowship at Ashkal Alwan, Beirut. Alternative art infrastructures.', img:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80'},
+  {id:'bartlett-thesis', title:'Bartlett Thesis', domains:['space','text'], year:'2014', tier:3, desc:'Erasure and mediation of place. MArch, UCL.', img:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80'},
+  {id:'beirut-sonic-map', title:'Beirut Sonic Map', domains:['sound','space','image'], year:'2020', tier:3, desc:'Acoustic geography of pre- and post-2020 blast Beirut.', img:'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80'},
+  {id:'archive-of-bans', title:'Archive of Bans', domains:['systems','text'], year:'2023', tier:3, desc:'Living archive of the systematic banning of Mashrou\' Leila across MENA.', img:'https://images.unsplash.com/photo-1590608897129-79da98d15969?w=600&q=80'},
+  {id:'guardian-exile', title:'On Exile — The Guardian', domains:['text'], year:'2019', tier:3, desc:'Essay on systemic banning, queer visibility, and political silence.', img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'},
+  {id:'westbeth-safe-haven', title:'Westbeth Safe Haven', domains:['space','systems'], year:'2024', tier:3, desc:'MEKENA NYC × Westbeth Artists Housing — emergency residency infrastructure.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'jean-nouvel-collab', title:'Ateliers Jean Nouvel', domains:['space'], year:'2012', tier:3, desc:'Architectural practice at Ateliers Jean Nouvel, Paris.', img:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80'},
+  {id:'sxsw-2022', title:'SXSW 2022 Premiere', domains:['sound','space'], year:'2022', tier:3, desc:'World premiere of Space Time Tuning Machine.', img:'https://images.unsplash.com/photo-1501386761578-eaa54b915e8f?w=600&q=80'},
+  {id:'the-broad-la', title:'The Broad Museum, LA', domains:['sound','space'], year:'2022', tier:3, desc:'Site-specific spatial audio installation, Los Angeles.', img:'https://images.unsplash.com/photo-1501386761578-eaa54b915e8f?w=600&q=80'},
+  {id:'columbia-lecture', title:'Columbia University — Lecture', domains:['text','systems'], year:'2020', tier:3, desc:'On systems choreography and the Localization Gap.', img:'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80'},
+  {id:'itp-camp-2024', title:'NYU ITP Camp 2024', domains:['code','systems'], year:'2024', tier:3, desc:'Experimental computing at NYU Tisch ITP.', img:'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&q=80'},
+  {id:'lede-nyc-strategy', title:'Lede.nyc — Strategy', domains:['systems','code','text'], year:'2025', tier:3, desc:'40-section strategic document for civic intelligence platform.', img:'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80'},
+  {id:'the-waw-signal', title:'The Waw Signal', domains:['sound','systems','image'], year:'2025', tier:3, desc:'و (waw) as waveform, heartbeat, hook — research behind Walaw Studio identity.', img:'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=600&q=80'},
+  {id:'beyrouth-france-culture', title:'Beyrouth et Beyrouth', domains:['text','sound'], year:'2015', tier:3, desc:'Essay/lecture for France Culture on Beirut\'s sonic geography.', img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'},
+  {id:'lamour-fait-loi', title:"L'Amour Fait Loi", domains:['text'], year:'2017', tier:3, desc:'Contribution to collection on love, law, and LGBTQ+ rights.', img:'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600&q=80'},
+  {id:'kardia-prd', title:'Kardia — Full PRD', domains:['code','text','systems'], year:'2026', tier:3, desc:'60+ page Product Requirements Document for Kardia.', img:'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80'},
+  {id:'epistemic-defense', title:'Epistemic Defense', domains:['systems','text'], year:'2024', tier:3, desc:'Framework for intellectual integrity in high-noise environments.', img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'},
+  {id:'npr-feature', title:'NPR Feature', domains:['sound','text'], year:'2019', tier:3, desc:'Featured profile on NPR on Mashrou\' Leila\'s political music.', img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'},
+  {id:'mika-collab', title:'Mika Collaboration', domains:['sound','image'], year:'2018', tier:3, desc:'Visual identity and touring design collaboration with Mika.', img:'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80'},
+  {id:'beyroutes-contributor', title:'Beyroutes', domains:['text','space'], year:'2013', tier:3, desc:'Guide to alternative routes through Beirut\'s counter-cultural geographies.', img:'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=600&q=80'},
+  {id:'aub-thesis', title:'AUB Thesis', domains:['space'], year:'2010', tier:3, desc:'Threshold architectures — liminal spaces and contested boundaries.', img:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80'},
+];
+
+// Edge connections — pairs by shared domain/theme proximity
+const EDGES = (() => {
+  const edges = [];
+  const added = new Set();
+  function addEdge(a, b) {
+    const key = [a,b].sort().join('--');
+    if (!added.has(key)) { added.add(key); edges.push({source:a, target:b}); }
+  }
+  // Manual curated connections
+  const clusters = [
+    ['mashrou-leila','rolling-stone-cover','ibn-el-leil-visuals','baalbeck-festival','barbican-performance','met-vessel-orchestra','yo-yo-ma-collab','mika-collab','archive-of-bans','npr-feature','cost-of-queer-arab','guardian-exile'],
+    ['space-time-tuning-machine','sxsw-2022','the-broad-la','photon-plus','subtractive-composition','caspian-mare-drift','tebr-project','beirut-sonic-map'],
+    ['localization-gap-audit','music-engines','arabic-maqam-research','ai-music-archive','harmonic-field-research','resonance-atlas','3d-beat-synth'],
+    ['cartography-of-absence','sometimes-i-wake-up-elsewhere','crane-song','souad-novella','bureaucratic-surrealism','the-forgery','lamour-fait-loi','beyrouth-france-culture','beyroutes-contributor'],
+    ['walaw-studio','mekena-nyc-initiative','systems-choreography','meaning-stack','impossible-futures','diagonal-logic','epistemic-defense','the-waw-signal','westbeth-safe-haven','sundance-fellowship'],
+    ['lede-nyc','lede-nyc-strategy','itp-camp-2024'],
+    ['kardia-system','kardia-prd','mobius-engine'],
+    ['derive-engine','hah-was-sieve','storylines-graph','99-nodes','loop-corridor','codeverse-explorer'],
+    ['bartlett-thesis','aub-thesis','jean-nouvel-collab','ashkal-alwan-fellowship','architecture-in-low-res','ghost-city-sculpture','project-agora','menara-infrastructure','the-labyrinth'],
+    ['mashrou-leila','space-time-tuning-machine'],
+    ['mashrou-leila','walaw-studio'],
+    ['localization-gap-audit','walaw-studio'],
+    ['cartography-of-absence','crane-song'],
+    ['space-time-tuning-machine','subtractive-composition'],
+    ['bartlett-thesis','architecture-in-low-res'],
+    ['mekena-nyc-initiative','westbeth-safe-haven'],
+    ['arabic-maqam-research','localization-gap-audit'],
+    ['kardia-system','music-engines'],
+    ['colors-baby','ai-music-archive'],
+    ['meaning-stack','systems-choreography'],
+    ['lede-nyc','itp-camp-2024'],
+  ];
+  clusters.forEach(cluster => {
+    for (let i = 0; i < cluster.length - 1; i++) {
+      addEdge(cluster[i], cluster[i+1]);
+      if (i < cluster.length - 2) addEdge(cluster[i], cluster[i+2]);
+    }
+  });
+  return edges;
+})();
+
+/* ════════════════════════════════════════════════════════════
+   ATLAS ENGINE
+   ════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('atlas-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, dpr;
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+}
+resize();
+window.addEventListener('resize', () => { resize(); });
+
+/* ── NODE RADIUS ─────────────────────────── */
+function nodeRadius(d) {
+  return d.tier === 1 ? 32 : d.tier === 2 ? 20 : 12;
+}
+
+/* ── COLORS ──────────────────────────────── */
+function nodeColor(d) {
+  return DOMAIN_COLORS[d.domains[0]] || '#5e5a55';
+}
+
+/* ── D3 SIMULATION ───────────────────────── */
+const nodeMap = new Map(NODES.map(n => [n.id, {...n, x: 0, y: 0, vx: 0, vy: 0}]));
+const linkData = EDGES.map(e => ({
+  source: nodeMap.get(e.source) || e.source,
+  target: nodeMap.get(e.target) || e.target
+})).filter(l => l.source && l.target && typeof l.source === 'object');
+const nodeData = Array.from(nodeMap.values());
+
+const sim = d3.forceSimulation(nodeData)
+  .force('link', d3.forceLink(linkData).id(d => d.id).distance(d => {
+    const s = d.source, t = d.target;
+    if (!s || !t) return 80;
+    const base = (nodeRadius(s) + nodeRadius(t)) * 2.2;
+    return base + 20;
+  }).strength(0.35))
+  .force('charge', d3.forceManyBody().strength(d => -(nodeRadius(d) ** 2) * 2.5))
+  .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 14))
+  .force('x', d3.forceX(0).strength(0.03))
+  .force('y', d3.forceY(0).strength(0.03))
+  .alphaDecay(0.015)
+  .velocityDecay(0.4);
+
+/* ── TRANSFORM / PAN / ZOOM ──────────────── */
+let tx = 0, ty = 0, scale = 1;
+let targetTx = 0, targetTy = 0, targetScale = 1;
+let isDragging = false, dragStart = {x:0,y:0}, panStart = {x:0,y:0};
+
+// Center graph on first tick
+sim.on('end', () => {
+  if (!initialized) {
+    tx = W/2; ty = H/2;
+    targetTx = W/2; targetTy = H/2;
+    initialized = true;
+  }
+});
+let initialized = false;
+// Start centered
+tx = W/2; ty = H/2; targetTx = W/2; targetTy = H/2;
+
+/* ── MOUSE / WHEEL ───────────────────────── */
+let mouseX = 0, mouseY = 0, curX = 0, curY = 0;
+const cursor = document.getElementById('cursor');
+const cursorHint = document.getElementById('cursor-hint');
+
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+(function trackCursor() {
+  curX += (mouseX - curX) * 0.15; curY += (mouseY - curY) * 0.15;
+  cursor.style.left = curX + 'px'; cursor.style.top = curY + 'px';
+  cursorHint.style.left = curX + 'px'; cursorHint.style.top = curY + 'px';
+  requestAnimationFrame(trackCursor);
+})();
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  isDragging = true;
+  dragStart = {x: e.clientX, y: e.clientY};
+  panStart = {x: targetTx, y: targetTy};
+  cursor.classList.add('drag');
+  cursor.classList.remove('hover');
+  cursorHint.classList.remove('vis');
+  document.getElementById('drag-hint').style.opacity = '0';
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  targetTx = panStart.x + (e.clientX - dragStart.x);
+  targetTy = panStart.y + (e.clientY - dragStart.y);
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  cursor.classList.remove('drag');
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.91;
+  const newScale = Math.max(0.15, Math.min(4, targetScale * factor));
+  // Zoom toward mouse
+  const mx = e.clientX, my = e.clientY;
+  targetTx = mx - (mx - targetTx) * (newScale / targetScale);
+  targetTy = my - (my - targetTy) * (newScale / targetScale);
+  targetScale = newScale;
+}, { passive: false });
+
+/* ── HOVER DETECTION ─────────────────────── */
+let hoveredNode = null;
+
+canvas.addEventListener('mousemove', e => {
+  if (isDragging) return;
+  const gx = (e.clientX - tx) / scale;
+  const gy = (e.clientY - ty) / scale;
+  let hit = null;
+  for (const n of nodeData) {
+    const dx = n.x - gx, dy = n.y - gy;
+    if (Math.sqrt(dx*dx + dy*dy) < nodeRadius(n) + 6) { hit = n; break; }
+  }
+  if (hit !== hoveredNode) {
+    hoveredNode = hit;
+    if (hit) {
+      cursor.classList.add('hover');
+      cursorHint.textContent = 'Explore';
+      cursorHint.classList.add('vis');
+    } else {
+      cursor.classList.remove('hover');
+      cursorHint.classList.remove('vis');
+    }
+  }
+});
+
+canvas.addEventListener('click', e => {
+  if (Math.abs(e.clientX - dragStart.x) > 4 || Math.abs(e.clientY - dragStart.y) > 4) return;
+  const gx = (e.clientX - tx) / scale;
+  const gy = (e.clientY - ty) / scale;
+  for (const n of nodeData) {
+    const dx = n.x - gx, dy = n.y - gy;
+    if (Math.sqrt(dx*dx + dy*dy) < nodeRadius(n) + 6) { openPanel(n); return; }
+  }
+  // Click empty = close panel
+  closePanel();
+});
+
+/* ── DOMAIN FILTER ───────────────────────── */
+let activeDomain = 'all';
+document.querySelectorAll('.df-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeDomain = btn.dataset.domain;
+    document.querySelectorAll('.df-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+function nodeOpacity(n) {
+  if (activeDomain === 'all') return 1;
+  return n.domains.includes(activeDomain) ? 1 : 0.06;
+}
+
+/* ── PANEL ───────────────────────────────── */
+let selectedNode = null;
+
+function openPanel(n) {
+  selectedNode = n;
+  const panel = document.getElementById('node-panel');
+  document.getElementById('panel-title').textContent = n.title;
+  document.getElementById('panel-year').textContent = n.year + (n.tier === 1 ? ' · Tier 1' : n.tier === 2 ? ' · Flagship' : ' · Archive');
+  document.getElementById('panel-desc').textContent = n.desc;
+  document.getElementById('panel-view-btn').href = `projects/${n.id}.html`;
+
+  // Domain tags
+  const domEl = document.getElementById('panel-domains');
+  domEl.innerHTML = n.domains.map(d => {
+    const c = DOMAIN_COLORS[d];
+    return `<span class="panel-domain-tag" style="color:${c};border-color:${c}22;background:${c}11">${d}</span>`;
+  }).join('');
+
+  // Connected nodes
+  const connEl = document.getElementById('panel-connections');
+  const connected = linkData
+    .filter(l => l.source.id === n.id || l.target.id === n.id)
+    .map(l => l.source.id === n.id ? l.target : l.source)
+    .filter(Boolean).slice(0, 8);
+  connEl.innerHTML = connected.map(c =>
+    `<button class="panel-conn-node" onclick="focusNode('${c.id}')">${c.title}</button>`
+  ).join('');
+
+  // Image
+  const pCanvas = document.getElementById('panel-canvas');
+  const pImg = document.getElementById('panel-img');
+  pImg.style.opacity = '0';
+  pImg.src = '';
+  const pCtx = pCanvas.getContext('2d');
+  pCtx.fillStyle = '#0c0b0a';
+  pCtx.fillRect(0, 0, 480, 270);
+  // pixel noise placeholder
+  for (let x = 0; x < 24; x++) for (let y = 0; y < 14; y++) {
+    const v = 10 + ((x*7+y*11) % 22);
+    pCtx.fillStyle = `rgb(${v+4},${Math.round(v*.9)},${Math.round(v*.78)})`;
+    pCtx.fillRect(x*20, y*20, 21, 21);
+  }
+  if (n.img) {
+    pImg.src = n.img;
+    pImg.onload = () => {
+      pImg.style.opacity = '1';
+      gsap.to(pCanvas, { opacity: 0, duration: .7, ease: 'power2.out' });
+    };
+  }
+
+  panel.classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('node-panel').classList.remove('open');
+  selectedNode = null;
+  gsap.set('#panel-canvas', { opacity: 1 });
+}
+
+window.focusNode = (id) => {
+  const n = nodeMap.get(id);
+  if (!n) return;
+  openPanel(n);
+  // Fly camera to node
+  targetTx = W/2 - n.x * targetScale;
+  targetTy = H/2 - n.y * targetScale;
+};
+
+document.getElementById('panel-close').addEventListener('click', closePanel);
+
+/* ── SPLASH / ENTRY ──────────────────────── */
+let atlasVisible = false;
+const sessionKey = 'atlas-visited';
+
+function enterAtlas() {
+  atlasVisible = true;
+  gsap.to('#splash', { opacity: 0, duration: .6, ease: 'power2.out', onComplete: () => {
+    document.getElementById('splash').style.display = 'none';
+  }});
+  document.getElementById('atlas-nav').classList.add('vis');
+  document.getElementById('minimap').classList.add('vis');
+  // Auto-dismiss drag hint
+  setTimeout(() => {
+    gsap.to('#drag-hint', { opacity: 0, duration: .8 });
+  }, 3200);
+  sessionStorage.setItem(sessionKey, '1');
+}
+
+// Skip splash if returning visitor
+if (sessionStorage.getItem(sessionKey)) {
+  document.getElementById('splash').style.display = 'none';
+  enterAtlas();
+}
+
+document.getElementById('splash-enter').addEventListener('click', enterAtlas);
+document.addEventListener('keydown', e => { if (!atlasVisible && e.key === 'Enter') enterAtlas(); });
+
+/* ── EXIT / PAGE TRANSITION ──────────────── */
+function doTransition(href) {
+  if (!href || href.startsWith('#')) return;
+  const bar = document.getElementById('page-transition');
+  gsap.set(bar, { yPercent: 100 });
+  const tl = gsap.timeline({ onComplete: () => { window.location.href = href; }});
+  tl.to(bar, { yPercent: 0, duration: 0.6, ease: 'expo.inOut' })
+    .to(bar, { css: { '::after': { yPercent: 0 }}, duration: 0.6, ease: 'expo.inOut' }, "-=0.4");
+}
+
+document.getElementById('nav-exit').addEventListener('click', () => doTransition('index.html'));
+document.querySelectorAll('a[href]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    doTransition(a.getAttribute('href'));
+  });
+});
+document.querySelectorAll('.nav-home, .splash-cta').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+document.querySelectorAll('.df-btn, .nav-exit, .panel-close, .panel-view-btn, .panel-conn-node, .splash-cta, .splash-enter, a').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+/* ── MINIMAP ─────────────────────────────── */
+const mmCanvas = document.getElementById('minimap-canvas');
+const mmCtx = mmCanvas.getContext('2d');
+const mmW = 140, mmH = 90;
+mmCanvas.width = mmW * 2; mmCanvas.height = mmH * 2;
+mmCanvas.style.width = mmW + 'px'; mmCanvas.style.height = mmH + 'px';
+mmCtx.scale(2, 2);
+
+function drawMinimap() {
+  if (nodeData.length === 0) return;
+  mmCtx.clearRect(0, 0, mmW, mmH);
+  mmCtx.fillStyle = 'rgba(7,7,6,.9)';
+  mmCtx.fillRect(0, 0, mmW, mmH);
+
+  // Find bounds
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  nodeData.forEach(n => {
+    minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+    minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+  });
+  const rng = Math.max(maxX - minX, maxY - minY, 1);
+  const pad = 10;
+  const mmScale = (Math.min(mmW, mmH) - pad*2) / rng;
+
+  const toMM = (x, y) => ({
+    x: pad + (x - minX) * mmScale + (mmW - pad*2 - (maxX - minX) * mmScale) / 2,
+    y: pad + (y - minY) * mmScale + (mmH - pad*2 - (maxY - minY) * mmScale) / 2,
+  });
+
+  // Edges
+  mmCtx.strokeStyle = 'rgba(255,255,255,.06)';
+  mmCtx.lineWidth = .4;
+  linkData.forEach(l => {
+    if (!l.source || !l.target || typeof l.source !== 'object') return;
+    const s = toMM(l.source.x, l.source.y), t = toMM(l.target.x, l.target.y);
+    mmCtx.beginPath(); mmCtx.moveTo(s.x, s.y); mmCtx.lineTo(t.x, t.y); mmCtx.stroke();
+  });
+
+  // Nodes
+  nodeData.forEach(n => {
+    const {x, y} = toMM(n.x, n.y);
+    const r = n.tier === 1 ? 3 : n.tier === 2 ? 2 : 1.2;
+    mmCtx.beginPath(); mmCtx.arc(x, y, r, 0, Math.PI * 2);
+    mmCtx.fillStyle = nodeColor(n) + (activeDomain === 'all' || n.domains.includes(activeDomain) ? 'cc' : '20');
+    mmCtx.fill();
+  });
+
+  // Viewport indicator
+  const vpW = (W / scale) * mmScale;
+  const vpH = (H / scale) * mmScale;
+  const vpX_in_graph = (-tx / scale);
+  const vpY_in_graph = (-ty / scale);
+  const vpMM = toMM(vpX_in_graph, vpY_in_graph);
+  const vp = document.getElementById('minimap-viewport');
+  vp.style.left = vpMM.x + 'px';
+  vp.style.top  = vpMM.y + 'px';
+  vp.style.width  = Math.min(vpW, mmW) + 'px';
+  vp.style.height = Math.min(vpH, mmH) + 'px';
+}
+
+/* ── RENDER LOOP ─────────────────────────── */
+let lastMM = 0;
+
+function drawFrame(ts) {
+  requestAnimationFrame(drawFrame);
+  if (!atlasVisible) return;
+
+  // Smooth pan/zoom
+  tx += (targetTx - tx) * 0.1;
+  ty += (targetTy - ty) * 0.1;
+  scale += (targetScale - scale) * 0.1;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Save and transform
+  ctx.save();
+  ctx.translate(tx, ty);
+  ctx.scale(scale, scale);
+
+  // Edges
+  linkData.forEach(l => {
+    if (!l.source || !l.target || typeof l.source !== 'object') return;
+    const sOp = nodeOpacity(l.source), tOp = nodeOpacity(l.target);
+    const op = Math.min(sOp, tOp);
+    if (op < 0.1) return;
+    const highlighted = hoveredNode && (l.source.id === hoveredNode.id || l.target.id === hoveredNode.id);
+    ctx.beginPath();
+    ctx.moveTo(l.source.x, l.source.y);
+    ctx.lineTo(l.target.x, l.target.y);
+    ctx.strokeStyle = highlighted
+      ? `rgba(184,150,106,${op * 0.55})`
+      : `rgba(255,255,255,${op * 0.05})`;
+    ctx.lineWidth = highlighted ? 1 / scale : 0.5 / scale;
+    ctx.stroke();
+  });
+
+  // Nodes
+  nodeData.forEach(n => {
+    const op = nodeOpacity(n);
+    const r = nodeRadius(n);
+    const isHovered = hoveredNode && hoveredNode.id === n.id;
+    const isSelected = selectedNode && selectedNode.id === n.id;
+    const col = nodeColor(n);
+
+    ctx.save();
+    ctx.globalAlpha = op;
+
+    // Glow ring for tier 1
+    if (n.tier === 1 && op > 0.5) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, r + 8, 0, Math.PI*2);
+      ctx.strokeStyle = col + '30'; ctx.lineWidth = 6 / scale; ctx.stroke();
+    }
+    if (isHovered || isSelected) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, r + 5, 0, Math.PI*2);
+      ctx.strokeStyle = col + '80'; ctx.lineWidth = 1.5 / scale; ctx.stroke();
+    }
+
+    // Node circle
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    const grad = ctx.createRadialGradient(n.x - r*0.3, n.y - r*0.3, 0, n.x, n.y, r);
+    grad.addColorStop(0, col + 'ee');
+    grad.addColorStop(1, col + '66');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Inner ring
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    ctx.strokeStyle = col + '44'; ctx.lineWidth = 1 / scale; ctx.stroke();
+
+    // Selected dot
+    if (isSelected) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, 3 / scale, 0, Math.PI*2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Label — scale-aware
+    const labelScale = Math.max(0.5, Math.min(1, scale));
+    const minScaleForLabel = n.tier === 1 ? 0.25 : n.tier === 2 ? 0.45 : 0.7;
+    if (scale >= minScaleForLabel && op > 0.2) {
+      ctx.save();
+      ctx.globalAlpha = op * Math.min(1, (scale - minScaleForLabel) * 4);
+      ctx.font = `${(n.tier === 1 ? 11 : 9) / scale}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = n.tier === 1 ? '#ddd5c2' : '#5e5a55';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.title.length > 22 ? n.title.slice(0, 22) + '…' : n.title, n.x, n.y + r + 14/scale);
+      ctx.restore();
+    }
+  });
+
+  ctx.restore();
+
+  // Minimap throttled
+  if (ts - lastMM > 80) { drawMinimap(); lastMM = ts; }
+}
+
+requestAnimationFrame(drawFrame);
+sim.restart();
+</script>
+</body>
+</html>

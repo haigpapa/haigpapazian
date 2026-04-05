@@ -1,0 +1,190 @@
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — tokens.css
+   Canonical design system for the Haig Papazian portfolio.
+   Shared across all source and generated pages.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Backgrounds ─────────────────────────────── */
+  --bg:        #070706;
+  --bg-card:   #0c0b0a;
+  --bg-hover:  #111009;
+
+  /* ── Ink / text ──────────────────────────────── */
+  --ink:       #ddd5c2;
+  --ink-2:     #5e5a55;
+  --ink-3:     #2e2c29;
+
+  /* ── Accent ──────────────────────────────────── */
+  --gold:      #b8966a;
+  --gold-lt:   #d4b08a;
+  --gold-dim:  rgba(184,150,106,.12);
+
+  /* ── Lines / borders ─────────────────────────── */
+  --line:      #181714;
+  --line-2:    #282420;
+
+  /* ── Typography ──────────────────────────────── */
+  --serif:     'Cormorant Garamond', Georgia, serif;
+  --sans:      'Space Grotesk', system-ui, sans-serif;
+
+  /* ── TYPE SCALE (FOUR-LEVEL SYSTEM) ──────────── */
+  /* Level 1: Hero / Display */
+  --type-1-size:      clamp(4rem, 9vw, 8.5rem);
+  --type-1-weight:    300;
+  --type-1-family:    var(--serif);
+  --type-1-lh:        0.9;
+  --type-1-track:     -0.02em;
+
+  /* Level 2: Section Headers / Display Secondary */
+  --type-2-size:      clamp(2rem, 5vw, 3.8rem);
+  --type-2-weight:    300;
+  --type-2-family:    var(--serif);
+  --type-2-lh:        1.12;
+  --type-2-track:     -0.01em;
+
+  /* Level 3: Body Text / Narrative */
+  --type-3-size:      1.3rem;
+  --type-3-weight:    400;
+  --type-3-family:    var(--serif);
+  --type-3-lh:        1.6;
+  --type-3-track:     0em;
+
+  /* Level 4: UI / Labels / Small text */
+  --type-4-size:      0.8rem;
+  --type-4-weight:    300;
+  --type-4-family:    var(--sans);
+  --type-4-lh:        1.7;
+  --type-4-track:     0em;
+
+  /* Labels (smallest tracked text) */
+  --label-size:       0.55rem;
+  --label-weight:     600;
+  --label-family:     var(--sans);
+  --label-track:      0.24em;
+  --label-case:       uppercase;
+
+  /* Eyebrow / Section label (smaller tracked variant) */
+  --eyebrow-size:     0.5rem;
+  --eyebrow-weight:   600;
+  --eyebrow-family:   var(--sans);
+  --eyebrow-track:    0.22em;
+  --eyebrow-case:     uppercase;
+
+  /* ── Domain colors ───────────────────────────── */
+  --sound:     #b8966a;
+  --text-c:    #5b8a7a;
+  --image:     #9a6b8a;
+  --code:      #4a8a9a;
+  --space:     #7a9a4a;
+  --systems:   #7a5a9a;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILM GRAIN OVERLAY — site-wide, CSS-only
+   A fixed pseudo-element with an animated SVG fractal noise
+   texture. Pointer-events: none so it never blocks interaction.
+   ═══════════════════════════════════════════════════════════ */
+@keyframes grain {
+  0%          { background-position:   0%   0% }
+  10%         { background-position: -5%  -10% }
+  20%         { background-position: -15%  5% }
+  30%         { background-position:  7% -25% }
+  40%         { background-position: -5%  25% }
+  50%         { background-position: -15%  10% }
+  60%         { background-position:  15% -5% }
+  70%         { background-position:   0%  15% }
+  80%         { background-position:  3%  35% }
+  90%         { background-position: -10%  10% }
+  100%        { background-position:   0%   0% }
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: -30%;           /* oversized so grain never tiles at edges */
+  width: 160%;
+  height: 160%;
+  z-index: 9998;         /* above everything except cursor (9999) */
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  animation: grain 0.12s steps(1) infinite;
+}
+
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { background: none; border: none; cursor: none; font-family: inherit; }
+body.no-scroll { overflow: hidden; }
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM CURSOR
+   ═══════════════════════════════════════════════════════════ */
+#cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  background: var(--ink);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  opacity: .5;
+  transition: width .25s, height .25s, background .25s, opacity .25s, border .25s;
+  mix-blend-mode: difference;
+}
+#cursor.hover {
+  width: 36px; height: 36px;
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  opacity: 1;
+}
+#cursor-label {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  font-family: var(--sans);
+  font-size: 0.5rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity .2s;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE TRANSITION BAR
+   ═══════════════════════════════════════════════════════════ */
+#page-transition {
+  position: fixed;
+  inset: 0;
+  background: var(--gold);
+  z-index: 99999;
+  pointer-events: none;
+  transform: translateY(100%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  #cursor, #cursor-label { display: none; }
+  body { cursor: auto; }
+  button { cursor: pointer; }
+  a { cursor: pointer; }
+}

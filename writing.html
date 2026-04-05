@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writing — Haig Papazian</title>
+<meta name="description" content="Essays, op-eds, cultural criticism, and longform writing by Haig Papazian — published in the New York Times, The Guardian, France Culture, and others.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="nav.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<!-- Lenis smooth scroll -->
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<!-- Tokens, reset, cursor, nav, and page transition styles are in tokens.css and nav.css -->
+<style>
+.nav-links a.active {
+  color: var(--gold);
+}
+.nav-links a.active::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--gold);
+  margin-top: 2px;
+}
+
+/* Mobile nav toggle */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px;
+}
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--ink);
+  transition: all .3s;
+}
+
+/* ─── HERO ───────────────────────────────────────────────────────── */
+.writing-hero {
+  padding: 160px clamp(24px, 5vw, 80px) 72px;
+  max-width: 880px;
+  border-bottom: 1px solid var(--line);
+}
+.writing-hero-eyebrow {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(12px);
+}
+.writing-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  margin-bottom: 28px;
+  opacity: 0;
+}
+.writing-hero h1 em {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+.writing-hero-desc {
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--ink-2);
+  max-width: 520px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.writing-hero-desc a {
+  color: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  transition: border-color .2s;
+}
+.writing-hero-desc a:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ─── FILTER BAR ─────────────────────────────────────────────────── */
+.filter-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 800;
+  background: rgba(7,7,6,.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 clamp(24px, 5vw, 80px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  height: 52px;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-btn {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  transition: color .2s, background .2s;
+  flex-shrink: 0;
+}
+.filter-btn:hover { color: var(--ink); background: var(--bg-hover); }
+.filter-btn.active {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+/* ─── WRITING LIST ───────────────────────────────────────────────── */
+.writing-list {
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+/* ─── FEATURED ESSAY ─────────────────────────────────────────────── */
+.writing-featured {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 64px 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s, transform .5s;
+}
+.writing-featured.revealed { opacity: 1; transform: none; }
+
+.feat-text { padding-right: 64px; }
+.feat-tag {
+  font-family: var(--sans);
+  font-size: 0.58rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feat-tag::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold);
+}
+.feat-title {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  margin-bottom: 20px;
+  transition: color .2s;
+}
+.feat-title:hover { color: var(--gold-lt); }
+.feat-excerpt {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: var(--ink-2);
+  margin-bottom: 32px;
+}
+.feat-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.feat-pub {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.feat-year {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  color: var(--ink-3);
+}
+.feat-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 28px;
+  transition: gap .2s;
+}
+.feat-link:hover { gap: 14px; }
+.feat-link::after { content: '→'; }
+
+.feat-img-wrap {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.feat-img-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.feat-img-wrap img {
+  position: absolute; top: -10%; left: 0;
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .8s;
+}
+.feat-img-wrap img.loaded { opacity: 1; }
+
+/* ─── WRITING ROWS ───────────────────────────────────────────────── */
+.writing-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 160px 120px 48px;
+  align-items: center;
+  gap: 0 24px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: background .2s, opacity .4s, transform .4s;
+}
+.writing-row.revealed { opacity: 1; transform: none; }
+.writing-row:hover { background: var(--bg-hover); margin: 0 -clamp(24px, 5vw, 80px); padding: 22px clamp(24px, 5vw, 80px); }
+
+.row-year {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  color: var(--ink-3);
+  letter-spacing: .06em;
+}
+.row-title {
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -.005em;
+  transition: color .2s;
+}
+.writing-row:hover .row-title { color: var(--gold-lt); }
+.row-pub {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  text-align: right;
+}
+.row-type {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 20px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-align: center;
+}
+.row-arrow {
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  text-align: right;
+  transition: color .2s, transform .2s;
+}
+.writing-row:hover .row-arrow {
+  color: var(--gold);
+  transform: translateX(4px);
+}
+
+/* Section header within list */
+.list-section-head {
+  padding: 40px 0 12px;
+  font-family: var(--sans);
+  font-size: 0.58rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ─── PULL QUOTE / INTERSTITIAL ──────────────────────────────────── */
+.writing-interstitial {
+  padding: 72px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s, transform .6s;
+}
+.writing-interstitial.revealed { opacity: 1; transform: none; }
+.interstitial-line {
+  width: 1px;
+  background: var(--gold);
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 80px;
+}
+.interstitial-quote {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--ink);
+  letter-spacing: -.01em;
+  max-width: 680px;
+}
+.interstitial-attr {
+  margin-top: 16px;
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ─── MANUSCRIPTS / LONGFORM ─────────────────────────────────────── */
+.manuscripts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 0;
+}
+.manuscript-card {
+  background: var(--bg);
+  padding: 40px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: background .2s;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: background .2s, opacity .5s, transform .5s;
+}
+.manuscript-card.revealed { opacity: 1; transform: none; }
+.manuscript-card:hover { background: var(--bg-hover); }
+.ms-status {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+  width: fit-content;
+}
+.ms-status.in-progress {
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid rgba(184,150,106,.25);
+}
+.ms-status.complete {
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+}
+.ms-title {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  transition: color .2s;
+}
+.manuscript-card:hover .ms-title { color: var(--gold-lt); }
+.ms-desc {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  line-height: 1.75;
+  color: var(--ink-2);
+  flex: 1;
+}
+.ms-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.ms-count {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  color: var(--ink-3);
+  letter-spacing: .06em;
+}
+.ms-genre {
+  font-family: var(--sans);
+  font-size: 0.58rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ─── SECTION DIVIDER ────────────────────────────────────────────── */
+.section-divider {
+  padding: clamp(48px, 6vw, 72px) 0 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+.section-divider h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  font-weight: 300;
+  letter-spacing: -.01em;
+}
+.section-divider-sub {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ─── CONTACT STRIP ──────────────────────────────────────────────── */
+.contact-strip {
+  padding: 64px clamp(24px, 5vw, 80px);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.contact-strip-text {
+  font-family: var(--serif);
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink);
+}
+.contact-strip-text span { color: var(--gold-lt); }
+.contact-strip-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.contact-strip-links a {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.contact-strip-links a:hover { color: var(--gold); }
+
+/* ─── FOOTER ─────────────────────────────────────────────────────── */
+footer {
+  padding: 28px clamp(24px, 5vw, 80px);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+footer span {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+.footer-nav {
+  display: flex;
+  gap: 20px;
+}
+.footer-nav a {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition: color .2s;
+}
+.footer-nav a:hover { color: var(--ink-2); }
+
+/* ─── HOVER PREVIEW ──────────────────────────────────────────────── */
+#row-preview {
+  position: fixed;
+  width: 200px;
+  height: 136px;
+  pointer-events: none;
+  z-index: 8000;
+  opacity: 0;
+  transform: scale(0.92) rotate(-1deg);
+  transition: opacity .22s, transform .22s;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+}
+#row-preview.visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+#row-preview canvas,
+#row-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+#row-preview img { opacity: 0; transition: opacity .6s; }
+#row-preview img.loaded { opacity: 1; }
+
+/* ─── MOBILE ─────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  #cursor, #cursor-label { display: none; }
+  body { cursor: auto; }
+  button { cursor: pointer; }
+  a { cursor: pointer; }
+
+  /* nav responsive handled by nav.css */
+
+  .writing-featured {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .feat-text { padding-right: 0; }
+  .feat-img-wrap { height: 220px; }
+
+  .writing-row {
+    grid-template-columns: 60px 1fr 80px;
+    gap: 0 12px;
+  }
+  .writing-row:hover { margin: 0; padding: 22px 0; }
+  .row-pub { display: none; }
+  .row-arrow { display: none; }
+
+  .manuscripts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-strip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .writing-row {
+    grid-template-columns: 50px 1fr;
+  }
+  .row-type { display: none; }
+}
+
+/* nav mobile handled by nav.css and nav.js */
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-label"></div>
+<div id="transition-bar"></div>
+
+<!-- Row hover preview -->
+<div id="row-preview">
+  <canvas id="preview-canvas"></canvas>
+  <img id="preview-img" alt="">
+</div>
+
+<!-- NAV injected by nav.js -->
+<div id="nav-placeholder"></div>
+
+<!-- Hero -->
+<section class="writing-hero">
+  <p class="writing-hero-eyebrow" id="hero-eyebrow">Essays, Criticism &amp; Longform</p>
+  <h1 id="hero-h1">Words as<br><em>infrastructure</em></h1>
+  <p class="writing-hero-desc" id="hero-desc">
+    Published in the <a href="https://nytimes.com" target="_blank" rel="noopener">New York Times</a>,
+    <a href="https://theguardian.com" target="_blank" rel="noopener">The Guardian</a>,
+    <a href="https://france.tv/france-culture" target="_blank" rel="noopener">France Culture</a>,
+    and elsewhere — on identity, exile, AI, music, and the cost of being seen.
+    Also: manuscripts in progress, lectures, and frameworks that have no other home.
+  </p>
+</section>
+
+<!-- Filter bar -->
+<div class="filter-bar" id="filter-bar">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="essay">Essay</button>
+  <button class="filter-btn" data-filter="op-ed">Op-Ed</button>
+  <button class="filter-btn" data-filter="interview">Interview</button>
+  <button class="filter-btn" data-filter="lecture">Lecture</button>
+  <button class="filter-btn" data-filter="manuscript">Manuscript</button>
+  <button class="filter-btn" data-filter="framework">Framework</button>
+</div>
+
+<!-- Writing list -->
+<main class="writing-list" id="writing-list">
+
+  <!-- Featured: NYT op-ed -->
+  <div class="writing-featured js-featured" data-filter="op-ed">
+    <div class="feat-text">
+      <p class="feat-tag">Featured</p>
+      <h2 class="feat-title">
+        <a href="https://www.nytimes.com/2019/07/17/opinion/gay-arab-queer.html" target="_blank" rel="noopener">
+          The Cost of Being Queer and Arab
+        </a>
+      </h2>
+      <p class="feat-excerpt">
+        Published the week Mashrou' Leila was banned from a concert in Egypt following protests.
+        An argument about the price of visibility — and why silence is never neutral —
+        that was cited in parliamentary proceedings and entered the public record of a culture war
+        still being fought.
+      </p>
+      <div class="feat-meta">
+        <span class="feat-pub">New York Times</span>
+        <span class="feat-year">2019</span>
+      </div>
+      <a href="https://www.nytimes.com/2019/07/17/opinion/gay-arab-queer.html" target="_blank" rel="noopener" class="feat-link">Read in NYT</a>
+    </div>
+    <div class="feat-img-wrap" id="feat-img">
+      <canvas id="feat-canvas"></canvas>
+      <img id="feat-photo"
+        src="images/projects/cost-of-queer-arab.jpg"
+        onerror="this.src='https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&q=80'"
+        alt="The Cost of Being Queer and Arab">
+    </div>
+  </div>
+
+  <!-- Pull quote -->
+  <div class="writing-interstitial js-interstitial" data-filter="all">
+    <div class="interstitial-line"></div>
+    <div>
+      <p class="interstitial-quote">
+        "Silence is not neutral. It is a position. It just happens to be one that benefits everyone except you."
+      </p>
+      <p class="interstitial-attr">— The Cost of Being Queer and Arab, NYT, 2019</p>
+    </div>
+  </div>
+
+  <!-- Published writing rows -->
+  <div class="section-divider" data-filter="all">
+    <h2>Published</h2>
+    <span class="section-divider-sub">Essays &amp; criticism</span>
+  </div>
+
+  <a href="https://www.nytimes.com/2019/07/17/opinion/gay-arab-queer.html" target="_blank" rel="noopener"
+     class="writing-row js-row" data-filter="op-ed"
+     data-img="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=400&q=80">
+    <span class="row-year">2019</span>
+    <span class="row-title">The Cost of Being Queer and Arab</span>
+    <span class="row-pub">New York Times</span>
+    <span class="row-type">Op-Ed</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/the-architecture-of-a-band-on-creative-direction-at-scale.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2022</span>
+    <span class="row-title">The Architecture of a Band — On Creative Direction at Scale</span>
+    <span class="row-pub">The Guardian</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/comment-un-groupe-libanais-a-chang-la-culture-musicale-arabe.html" class="writing-row js-row" data-filter="interview"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2022</span>
+    <span class="row-title">Comment un groupe libanais a changé la culture musicale arabe</span>
+    <span class="row-pub">France Culture</span>
+    <span class="row-type">Interview</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/the-localization-gap-how-ai-systems-erase-cultural-specificity.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80">
+    <span class="row-year">2024</span>
+    <span class="row-title">The Localization Gap — How AI Systems Erase Cultural Specificity</span>
+    <span class="row-pub">Walaw Studio</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/banned-what-happens-when-the-state-hears-your-music.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2021</span>
+    <span class="row-title">Banned: What Happens When the State Hears Your Music</span>
+    <span class="row-pub">The Guardian</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/rolling-stone-arabia-on-being-the-first.html" class="writing-row js-row" data-filter="interview"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2019</span>
+    <span class="row-title">Rolling Stone Arabia — On Being the First</span>
+    <span class="row-pub">Rolling Stone</span>
+    <span class="row-type">Interview</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/architecture-as-score-spatial-design-and-the-music-venue.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80">
+    <span class="row-year">2018</span>
+    <span class="row-title">Architecture as Score — Spatial Design and the Music Venue</span>
+    <span class="row-pub">Architectural Review</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/exile-and-its-instruments.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2017</span>
+    <span class="row-title">Exile and Its Instruments</span>
+    <span class="row-pub">Bidayyat</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/on-making-music-that-gets-you-banned.html" class="writing-row js-row" data-filter="essay"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2016</span>
+    <span class="row-title">On Making Music That Gets You Banned</span>
+    <span class="row-pub">Fader</span>
+    <span class="row-type">Essay</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+
+  <!-- Lectures section -->
+  <div class="section-divider" data-filter="all">
+    <h2>Lectures &amp; Talks</h2>
+    <span class="section-divider-sub">Keynotes, panels, academic</span>
+  </div>
+
+  <a href="writing/ai-and-the-erasure-of-cultural-memory-nyu-itp.html" class="writing-row js-row" data-filter="lecture"
+     data-img="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80">
+    <span class="row-year">2024</span>
+    <span class="row-title">AI and the Erasure of Cultural Memory — NYU ITP</span>
+    <span class="row-pub">NYU ITP</span>
+    <span class="row-type">Lecture</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/diagonal-logic-working-across-disciplines-at-angles.html" class="writing-row js-row" data-filter="lecture"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2023</span>
+    <span class="row-title">Diagonal Logic — Working Across Disciplines at Angles</span>
+    <span class="row-pub">Sundance Institute</span>
+    <span class="row-type">Lecture</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/the-space-time-tuning-machine-sxsw-keynote.html" class="writing-row js-row" data-filter="lecture"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2022</span>
+    <span class="row-title">The Space Time Tuning Machine — SXSW Keynote</span>
+    <span class="row-pub">SXSW</span>
+    <span class="row-type">Lecture</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/music-as-political-infrastructure-ashkal-alwan-lecture-series.html" class="writing-row js-row" data-filter="lecture"
+     data-img="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80">
+    <span class="row-year">2021</span>
+    <span class="row-title">Music as Political Infrastructure — Ashkal Alwan Lecture Series</span>
+    <span class="row-pub">Ashkal Alwan</span>
+    <span class="row-type">Lecture</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/subtractive-composition-the-bartlett-school-of-architecture.html" class="writing-row js-row" data-filter="lecture"
+     data-img="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80">
+    <span class="row-year">2019</span>
+    <span class="row-title">Subtractive Composition — The Bartlett School of Architecture</span>
+    <span class="row-pub">The Bartlett, UCL</span>
+    <span class="row-type">Lecture</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <!-- Second pull quote -->
+  <div class="writing-interstitial js-interstitial" data-filter="all">
+    <div class="interstitial-line"></div>
+    <div>
+      <p class="interstitial-quote">
+        "The maqam is not a scale. It is a grammar of feeling — a system for navigating emotional space
+        that Western music theory has no word for and AI training data has no record of."
+      </p>
+      <p class="interstitial-attr">— The Localization Gap, Walaw Studio, 2024</p>
+    </div>
+  </div>
+
+  <!-- Frameworks section -->
+  <div class="section-divider" data-filter="all">
+    <h2>Frameworks</h2>
+    <span class="section-divider-sub">Working concepts &amp; research positions</span>
+  </div>
+
+  <a href="writing/the-localization-gap-ai-s-erasure-of-cultural-specificity.html" class="writing-row js-row" data-filter="framework"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2023</span>
+    <span class="row-title">The Localization Gap — AI's Erasure of Cultural Specificity</span>
+    <span class="row-pub">Walaw Studio</span>
+    <span class="row-type">Framework</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/choreography-of-systems-authorship-across-disciplines.html" class="writing-row js-row" data-filter="framework"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2022</span>
+    <span class="row-title">Choreography of Systems — Authorship Across Disciplines</span>
+    <span class="row-pub">Walaw Studio</span>
+    <span class="row-type">Framework</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/diagonal-logic-cross-disciplinary-method.html" class="writing-row js-row" data-filter="framework"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2023</span>
+    <span class="row-title">Diagonal Logic — Cross-Disciplinary Method</span>
+    <span class="row-pub">Walaw Studio</span>
+    <span class="row-type">Framework</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <a href="writing/impossible-futures-designing-toward-blocked-outcomes.html" class="writing-row js-row" data-filter="framework"
+     data-img="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80">
+    <span class="row-year">2024</span>
+    <span class="row-title">Impossible Futures — Designing Toward Blocked Outcomes</span>
+    <span class="row-pub">Walaw Studio</span>
+    <span class="row-type">Framework</span>
+    <span class="row-arrow">→</span>
+  </a>
+
+  <!-- Manuscripts section -->
+  <div class="section-divider" data-filter="all">
+    <h2>Manuscripts</h2>
+    <span class="section-divider-sub">Long-form works in progress &amp; completed</span>
+  </div>
+
+  <div class="manuscripts-grid" id="manuscripts-grid">
+    <div class="manuscript-card js-ms" data-filter="manuscript">
+      <span class="ms-status in-progress">In progress</span>
+      <h3 class="ms-title">Sometimes I Wake Up Elsewhere</h3>
+      <p class="ms-desc">
+        An autofiction dream cycle — 62 entries, ~28,000 words. No named sections;
+        sequencing does the structural work. Surrealism arrives through physical detail.
+        Beau and Griffin anchor the prose throughout. The ending stops in ordinary presence —
+        it does not resolve.
+      </p>
+      <div class="ms-meta">
+        <span class="ms-count">~28,000 words · 62 entries</span>
+        <span class="ms-genre">Autofiction</span>
+      </div>
+    </div>
+
+    <div class="manuscript-card js-ms" data-filter="manuscript">
+      <span class="ms-status complete">Complete</span>
+      <h3 class="ms-title">The Crane Song</h3>
+      <p class="ms-desc">
+        A Lebanese-Armenian exile in Brooklyn encounters a broken AI bird —
+        remnant of a virtual reconstruction of Beirut that no longer exists.
+        ~10,000 words. Uses bureaucratic and clinical language as literary texture.
+        Character: Sarkis Melkonian.
+      </p>
+      <div class="ms-meta">
+        <span class="ms-count">~10,000 words</span>
+        <span class="ms-genre">Short fiction</span>
+      </div>
+    </div>
+
+    <div class="manuscript-card js-ms" data-filter="manuscript">
+      <span class="ms-status complete">Complete (earlier draft)</span>
+      <h3 class="ms-title">Cartography of Absence</h3>
+      <p class="ms-desc">
+        A modular dream cycle structured as bureaucratic forms — displacement explored
+        through nine thematic "Houses." The predecessor to Sometimes I Wake Up Elsewhere.
+        The formal conceit: what if homesickness had a filing system?
+      </p>
+      <div class="ms-meta">
+        <span class="ms-count">Nine Houses</span>
+        <span class="ms-genre">Prose / hybrid</span>
+      </div>
+    </div>
+
+    <div class="manuscript-card js-ms" data-filter="manuscript">
+      <span class="ms-status in-progress">Drafting</span>
+      <h3 class="ms-title">The Souad Novella</h3>
+      <p class="ms-desc">
+        An unnamed female protagonist navigates the bureaucratic architecture of exile —
+        identity documents, transit zones, language switching, the gap between
+        what a form asks and what a life contains.
+      </p>
+      <div class="ms-meta">
+        <span class="ms-count">In development</span>
+        <span class="ms-genre">Novella</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Contact strip -->
+<div class="contact-strip">
+  <p class="contact-strip-text">
+    Commissions, reprints, and <span>correspondence</span> welcome.
+  </p>
+  <div class="contact-strip-links">
+    <a href="mailto:haig@walaw.studio">haig@walaw.studio →</a>
+    <a href="https://linkedin.com/in/haigpapazian" target="_blank" rel="noopener">LinkedIn →</a>
+    <a href="index.html">haigpapazian.com →</a>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <span>© 2026 Haig Papazian · haigpapazian.com</span>
+  <nav class="footer-nav">
+    <a href="index.html">Home</a>
+    <a href="works.html">Works</a>
+    <a href="atlas.html">Atlas</a>
+    <a href="writing.html">Writing</a>
+  </nav>
+</footer>
+
+<script>
+/* ─── LENIS SMOOTH SCROLL ────────────────────────────────────────── */
+const lenis = new Lenis({ duration: 1.2, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+function rafLoop(time) { lenis.raf(time); requestAnimationFrame(rafLoop); }
+requestAnimationFrame(rafLoop);
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────────────── */
+const cur = document.getElementById('cursor');
+const curLbl = document.getElementById('cursor-label');
+let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+let lcx = cx, lcy = cy;
+
+window.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
+
+(function curLoop() {
+  lcx += (cx - lcx) * 0.14;
+  lcy += (cy - lcy) * 0.14;
+  cur.style.left = lcx + 'px';
+  cur.style.top  = lcy + 'px';
+  curLbl.style.left = (lcx + 20) + 'px';
+  curLbl.style.top  = (lcy - 6)  + 'px';
+  requestAnimationFrame(curLoop);
+})();
+
+document.querySelectorAll('a, button, .writing-row, .manuscript-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+});
+
+/* ─── PAGE TRANSITION ────────────────────────────────────────────── */
+const bar = document.getElementById('transition-bar');
+document.querySelectorAll('a[href]').forEach(a => {
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('mailto')) return;
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    gsap.set(bar, { yPercent: 100 });
+    const tl = gsap.timeline({ onComplete: () => { window.location.href = href; }});
+    tl.to(bar, { yPercent: 0, duration: 0.6, ease: 'expo.inOut' })
+      .to(bar, { css: { '::after': { yPercent: 0 }}, duration: 0.6, ease: 'expo.inOut' }, "-=0.4");
+  });
+});
+
+/* ─── HERO ENTRANCE ──────────────────────────────────────────────── */
+gsap.to('#hero-eyebrow', { opacity: 1, y: 0, duration: .7, delay: .3, ease: 'power2.out' });
+gsap.to('#hero-h1', {
+  opacity: 1, duration: .9, delay: .45, ease: 'power2.out',
+  onStart() { document.getElementById('hero-h1').style.transform = 'translateY(16px)'; },
+});
+gsap.fromTo('#hero-h1', { y: 16 }, { y: 0, duration: .9, delay: .45, ease: 'power2.out' });
+gsap.to('#hero-desc', { opacity: 1, y: 0, duration: .7, delay: .6, ease: 'power2.out' });
+
+/* ─── FEATURED IMAGE PIXELATED LOAD ─────────────────────────────── */
+function pixelLoad(canvas, img) {
+  const ctx = canvas.getContext('2d');
+  canvas.width  = canvas.offsetWidth  || 480;
+  canvas.height = canvas.offsetHeight || 360;
+  const W = canvas.width, H = canvas.height;
+
+  const DOMAIN_COLORS = ['#b8966a','#5b8a7a','#9a6b8a','#4a8a9a'];
+  let step = 0;
+  const steps = [32, 16, 8, 4, 2];
+
+  const interval = setInterval(() => {
+    if (step >= steps.length) { clearInterval(interval); return; }
+    const sz = steps[step++];
+    for (let y = 0; y < H; y += sz) {
+      for (let x = 0; x < W; x += sz) {
+        const col = DOMAIN_COLORS[Math.floor(Math.random() * DOMAIN_COLORS.length)];
+        ctx.fillStyle = col + Math.floor(Math.random() * 60 + 20).toString(16).padStart(2,'0');
+        ctx.fillRect(x, y, sz, sz);
+      }
+    }
+  }, 80);
+
+  img.onload = () => {
+    clearInterval(interval);
+    img.classList.add('loaded');
+  };
+}
+
+const featCanvas = document.getElementById('feat-canvas');
+const featPhoto  = document.getElementById('feat-photo');
+if (featCanvas && featPhoto) {
+  setTimeout(() => { pixelLoad(featCanvas, featPhoto); }, 200);
+}
+
+/* ─── FEATURED SECTION REVEAL ────────────────────────────────────── */
+const featEl = document.querySelector('.js-featured');
+if (featEl) {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); }});
+  }, { threshold: 0.1 });
+  obs.observe(featEl);
+}
+
+/* ─── ROW HOVER PREVIEW ──────────────────────────────────────────── */
+const preview     = document.getElementById('row-preview');
+const prevCanvas  = document.getElementById('preview-canvas');
+const prevImg     = document.getElementById('preview-img');
+let previewTimer  = null;
+let currentImgSrc = null;
+
+function drawPreviewPixels() {
+  const ctx = prevCanvas.getContext('2d');
+  prevCanvas.width  = 200;
+  prevCanvas.height = 136;
+  const W = 200, H = 136;
+  const colors = ['#b8966a','#5b8a7a','#9a6b8a','#4a8a9a'];
+  const sz = 8;
+  for (let y = 0; y < H; y += sz) {
+    for (let x = 0; x < W; x += sz) {
+      ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)] + '55';
+      ctx.fillRect(x, y, sz, sz);
+    }
+  }
+}
+
+function bindPreviewHover() {
+  document.querySelectorAll('.js-row').forEach(row => {
+    row.addEventListener('mouseenter', () => {
+      const src = row.dataset.img;
+      if (!src) return;
+      if (src !== currentImgSrc) {
+        currentImgSrc = src;
+        prevImg.classList.remove('loaded');
+        prevImg.src = src;
+        prevImg.onload = () => prevImg.classList.add('loaded');
+        drawPreviewPixels();
+      }
+      preview.classList.add('visible');
+    });
+    row.addEventListener('mouseleave', () => {
+      preview.classList.remove('visible');
+    });
+    row.addEventListener('mousemove', e => {
+      gsap.to(preview, {
+        x: e.clientX + 20,
+        y: e.clientY - 68,
+        duration: 0.18,
+        ease: 'power2.out'
+      });
+    });
+  });
+}
+bindPreviewHover();
+
+/* ─── ROW ENTRANCE ───────────────────────────────────────────────── */
+const rows = document.querySelectorAll('.js-row');
+const rowObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('revealed'), e.target.dataset.delay || 0);
+      rowObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+rows.forEach((row, i) => {
+  row.dataset.delay = i * 28;
+  rowObs.observe(row);
+});
+
+/* ─── INTERSTITIAL REVEAL ────────────────────────────────────────── */
+document.querySelectorAll('.js-interstitial, .js-ms').forEach(el => {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); }});
+  }, { threshold: 0.12 });
+  obs.observe(el);
+});
+
+/* ─── FILTER ─────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const filterBtns = document.querySelectorAll('.filter-btn');
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+
+    // Rows
+    document.querySelectorAll('.js-row').forEach(row => {
+      const match = f === 'all' || row.dataset.filter === f;
+      row.style.display = match ? '' : 'none';
+    });
+
+    // Featured, interstitials, section headers
+    document.querySelectorAll('.js-featured, .js-interstitial, .section-divider').forEach(el => {
+      el.style.display = (f === 'all' || el.dataset.filter === f || el.dataset.filter === 'all') ? '' : 'none';
+    });
+
+    // Manuscripts
+    const msGrid = document.getElementById('manuscripts-grid');
+    document.querySelectorAll('.js-ms').forEach(ms => {
+      ms.style.display = (f === 'all' || f === 'manuscript') ? '' : 'none';
+    });
+    if (msGrid) msGrid.style.display = (f === 'all' || f === 'manuscript') ? '' : 'none';
+    document.querySelectorAll('.section-divider').forEach(el => {
+      el.style.display = f === 'all' ? '' : '';
+    });
+  });
+});
+
+/* ─── MOBILE NAV ─────────────────────────────────────────────────── */
+const navToggle   = document.getElementById('nav-toggle');
+const mobileNav   = document.getElementById('mobile-nav');
+const mobileClose = document.getElementById('mobile-nav-close');
+navToggle.addEventListener('click', () => mobileNav.classList.add('open'));
+mobileClose.addEventListener('click', () => mobileNav.classList.remove('open'));
+
+/* ─── SCROLLTRIGGER PARALLAX ────────────────────────────── */
+gsap.registerPlugin(ScrollTrigger);
+gsap.to('.writing-hero', {
+  y: -40,
+  ease: 'none',
+  scrollTrigger: {
+    trigger: '.writing-hero',
+    start: 'top top',
+    end: 'bottom top',
+    scrub: 1
+  }
+});
+
+gsap.utils.toArray('.feat-img-wrap').forEach(container => {
+  const img = container.querySelector('img');
+  if(img) {
+    gsap.fromTo(img, 
+      { yPercent: -15 },
+      {
+        yPercent: 15,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true
+        }
+      }
+    );
+  }
+});
+});
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

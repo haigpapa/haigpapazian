@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comment un groupe libanais a changé la culture musicale arabe — Haig Papazian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../nav.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+.writing-detail-header { padding: 8rem clamp(1.5rem,3vw,3rem) 3rem; border-bottom: 1px solid var(--line); max-width: 860px; }
+.writing-back { font-family: var(--sans); font-size: .5rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-2); display: inline-block; margin-bottom: 2rem; transition: color .2s; }
+.writing-back:hover { color: var(--gold); }
+.writing-detail-year { font-family: var(--sans); font-size: .5rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+.writing-detail-title { font-family: var(--serif); font-weight: 300; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.05; color: var(--ink); margin-bottom: 1rem; letter-spacing: -.01em; }
+.writing-detail-pub { font-family: var(--sans); font-size: .55rem; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.writing-read-section { padding: 4rem clamp(1.5rem,3vw,3rem); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 1.5rem; }
+.writing-read-btn { font-family: var(--sans); font-size: .55rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--bg); background: var(--gold); padding: .85rem 2rem; display: inline-block; transition: background .2s; }
+.writing-read-btn:hover { background: var(--gold-lt); }
+.writing-read-note { font-family: var(--sans); font-size: .45rem; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+#page-transition { position:fixed;inset:0;background:var(--gold);z-index:99999;pointer-events:none;transform:translateY(100%); }
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="page-transition"></div>
+<div id="nav-placeholder"></div>
+<header class="writing-detail-header">
+  <a href="../writing.html" class="writing-back">← Writing</a>
+  <div class="writing-detail-year">2022</div>
+  <h1 class="writing-detail-title">Comment un groupe libanais a changé la culture musicale arabe</h1>
+  <div class="writing-detail-pub">France Culture</div>
+</header>
+
+<script>
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => { cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
+document.querySelectorAll('a,button').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.classList.add('hover')); el.addEventListener('mouseleave',()=>cursor.classList.remove('hover')); });
+function doTransition(href){ if(!href||href.startsWith('#')||href.startsWith('http'))return; const bar=document.getElementById('page-transition'); gsap.set(bar,{yPercent:100}); gsap.timeline({onComplete:()=>{window.location.href=href;}}).to(bar,{yPercent:0,duration:0.55,ease:'expo.inOut'}); }
+document.querySelectorAll('a[href]').forEach(a=>{ const href=a.getAttribute('href'); if(a.target!=='_blank'&&href&&!href.startsWith('http')){ a.addEventListener('click',e=>{e.preventDefault();doTransition(href);}); } });
+</script>
+<script src="../nav.js"></script>
+</body>
+</html>

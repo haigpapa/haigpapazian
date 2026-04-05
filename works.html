@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Works — Haig Papazian</title>
+<meta name="description" content="The complete archive of Haig Papazian's work across sound, text, image, code, space, and systems.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="nav.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<style>
+/* Tokens, reset, cursor, nav, and page transition styles are in tokens.css and nav.css */
+
+/* PAGE HEADER */
+#page-header {
+  padding: 8rem clamp(1.5rem,3vw,3rem) 3rem;
+  border-bottom: 1px solid var(--line);
+}
+.page-eyebrow { font-family: var(--sans); font-size: .55rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: block; }
+.page-title { font-family: var(--serif); font-weight: 300; font-size: clamp(3rem,7vw,6rem); line-height: .92; color: var(--ink); margin-bottom: 1rem; }
+.page-desc { font-family: var(--sans); font-weight: 300; font-size: .8rem; color: var(--ink-2); max-width: 55ch; line-height: 1.7; }
+
+/* CONTROLS BAR */
+#controls {
+  position: sticky; top: 60px; z-index: 50;
+  background: rgba(7,7,6,.96); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 clamp(1.5rem,3vw,3rem);
+  display: flex; align-items: stretch; gap: 0;
+}
+.search-wrap {
+  flex: 1; display: flex; align-items: center; gap: .75rem;
+  border-right: 1px solid var(--line); padding: .9rem 1.2rem .9rem 0;
+}
+.search-icon { color: var(--ink-3); font-size: .7rem; flex-shrink: 0; }
+#search-input {
+  background: none; border: none; outline: none;
+  font-family: var(--sans); font-size: .65rem; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink);
+  width: 100%; cursor: none;
+}
+#search-input::placeholder { color: var(--ink-3); }
+.filters { display: flex; align-items: center; gap: 0; }
+.filter-btn {
+  font-family: var(--sans); font-size: .58rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-3); background: none; border: none;
+  padding: .9rem 1rem; cursor: none;
+  transition: color .2s; position: relative; border-right: 1px solid var(--line);
+}
+.filter-btn:last-child { border-right: none; }
+.filter-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 100%;
+  height: 2px; background: var(--gold); transition: right .35s cubic-bezier(.4,0,.2,1);
+}
+.filter-btn:hover { color: var(--ink); }
+.filter-btn.active { color: var(--ink); }
+.filter-btn.active::after { right: 0; }
+
+/* SORT / COUNT BAR */
+#meta-bar {
+  padding: .85rem clamp(1.5rem,3vw,3rem);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+#result-count { font-family: var(--sans); font-size: .55rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.sort-wrap { display: flex; align-items: center; gap: .5rem; }
+.sort-label { font-family: var(--sans); font-size: .52rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.sort-btn { font-family: var(--sans); font-size: .52rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); background: none; border: none; cursor: none; transition: color .2s; padding: .2rem .4rem; }
+.sort-btn.active { color: var(--gold); }
+.sort-btn:hover { color: var(--ink-2); }
+.sort-sep { color: var(--ink-3); font-size: .5rem; }
+
+/* WORKS LIST */
+#works-list { padding: 0 clamp(1.5rem,3vw,3rem); }
+
+.work-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.35rem 0; border-bottom: 1px solid var(--line);
+  cursor: none; position: relative; transition: background .15s, opacity .3s, transform .2s;
+  color: inherit; text-decoration: none; gap: 1rem;
+}
+.work-row:first-child { border-top: 1px solid var(--line); }
+.work-row:hover { background: var(--bg-card); margin: 0 -1.5rem; padding-top: 1.8rem; padding-bottom: 1.8rem; padding-left: 1.5rem; padding-right: 1.5rem; }
+#works-list:hover .work-row:not(:hover) { opacity: 0.25; transform: scale(0.99); filter: grayscale(100%); }
+.work-row::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 100%;
+  height: 1px; background: var(--gold); transition: right .5s cubic-bezier(.4,0,.2,1); z-index: 1;
+}
+.work-row:hover::after { right: 0; }
+
+.work-row-left { flex: 1; min-width: 0; }
+.work-title { font-family: var(--serif); font-weight: 300; font-size: clamp(.95rem,1.8vw,1.3rem); color: var(--ink); transition: color .2s; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.work-row:hover .work-title { color: var(--gold-lt); }
+.work-domains { font-family: var(--sans); font-size: .48rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); margin-top: .18rem; }
+
+.work-row-mid { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+.domain-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.domain-dot.sound   { background: #b8966a; }
+.domain-dot.text    { background: #5b8a7a; }
+.domain-dot.image   { background: #8a5b7a; }
+.domain-dot.code    { background: #4a7a8a; }
+.domain-dot.space   { background: #7a8a4a; }
+.domain-dot.systems { background: #7a5a8a; }
+
+.work-row-right { display: flex; align-items: center; gap: 2rem; flex-shrink: 0; }
+.work-meta { font-family: var(--sans); font-size: .52rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); text-align: right; min-width: 5rem; }
+.work-arrow { font-family: var(--sans); font-size: .85rem; color: var(--ink-3); transition: transform .25s, color .25s; }
+.work-row:hover .work-arrow { transform: translateX(4px); color: var(--gold); }
+
+/* DOMAIN SECTION HEADERS */
+.domain-header {
+  padding: 2.5rem 0 .75rem;
+  display: flex; align-items: baseline; gap: 1rem;
+  border-bottom: 1px solid var(--line-2);
+  margin-bottom: 0;
+}
+.domain-header-label {
+  font-family: var(--sans); font-size: .58rem; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--ink-3);
+}
+.domain-header-count {
+  font-family: var(--sans); font-size: .5rem; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+
+/* CURSOR PREVIEW */
+.row-preview {
+  position: fixed; width: 280px; height: 190px;
+  pointer-events: none; z-index: 500; overflow: hidden;
+  opacity: 0; transition: opacity .18s; will-change: transform;
+  top: 0; left: 0;
+}
+.row-preview.visible { opacity: 1; }
+.row-preview canvas, .row-preview img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.row-preview img { opacity: 0; transition: opacity .55s; }
+.preview-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background: linear-gradient(135deg, rgba(7,7,6,.25) 0%, transparent 60%);
+}
+.preview-label {
+  position: absolute; bottom: .75rem; left: .75rem; z-index: 3;
+  font-family: var(--sans); font-size: .45rem; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+}
+
+/* EMPTY STATE */
+#empty-state {
+  display: none; padding: 6rem clamp(1.5rem,3vw,3rem);
+  text-align: center;
+}
+#empty-state p { font-family: var(--serif); font-weight: 300; font-size: 1.5rem; color: var(--ink-3); }
+
+/* FOOTER */
+#footer {
+  padding: 2rem clamp(1.5rem,3vw,3rem);
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4rem;
+}
+.footer-tagline { font-family: var(--sans); font-size: .55rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.footer-logo { font-family: var(--serif); font-weight: 300; font-size: .85rem; color: var(--ink-3); }
+
+/* PAGE TRANSITION */
+#page-transition { position: fixed; inset: 0; background: var(--bg); z-index: 9990; pointer-events: none; transform: translateY(100%); }
+#page-transition::after { content: ''; position: absolute; inset: 0; background: var(--gold); transform: translateY(100%); }
+
+@media (max-width: 860px) {
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .search-wrap { border-right: none; border-bottom: 1px solid var(--line); }
+  .work-row-mid { display: none; }
+  .work-meta { display: none; }
+  #controls { flex-direction: column; gap: 0; }
+  .filters {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: .6rem 1.2rem;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-btn {
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
+    padding: .5rem .9rem;
+  }
+}
+@media (max-width: 560px) {
+  #controls { padding: 0 1rem; }
+  #works-list { padding: 0 1rem; }
+  .work-row:hover { margin: 0 -1rem; padding-left: 1rem; padding-right: 1rem; }
+}
+
+/* NO SCROLL */
+body.no-scroll { overflow: hidden; }
+
+/* ENTRANCE ANIMATIONS */
+.work-row { opacity: 0; transform: translateX(-12px); }
+.work-row.revealed { opacity: 1; transform: translateX(0); transition: opacity .45s ease, transform .45s ease; }
+.work-row.hidden-row { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="page-transition"></div>
+
+<!-- NAV injected by nav.js -->
+<div id="nav-placeholder"></div>
+
+<!-- CURSOR PREVIEW -->
+<div class="row-preview" id="row-preview">
+  <canvas id="preview-canvas"></canvas>
+  <img id="preview-img" alt="">
+  <div class="preview-overlay"></div>
+  <div class="preview-label" id="preview-label"></div>
+</div>
+
+<!-- PAGE HEADER -->
+<header id="page-header">
+  <span class="page-eyebrow">Archive</span>
+  <h1 class="page-title">Works</h1>
+  <p class="page-desc">The public body of work, organized editorially first and by domain second. <span id="header-count" style="color:var(--gold)">74 projects</span> across sound, text, image, code, space, and systems.</p>
+</header>
+
+<!-- CONTROLS -->
+<div id="controls">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search-input" placeholder="Search by title, year, or domain" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="sound">Sound</button>
+    <button class="filter-btn" data-filter="text">Text</button>
+    <button class="filter-btn" data-filter="image">Image</button>
+    <button class="filter-btn" data-filter="code">Code</button>
+    <button class="filter-btn" data-filter="space">Space</button>
+    <button class="filter-btn" data-filter="systems">Systems</button>
+  </div>
+</div>
+
+<!-- META BAR -->
+<div id="meta-bar">
+  <span id="result-count">74 Projects</span>
+  <div class="sort-wrap">
+    <span class="sort-label">Sort:</span>
+    <button class="sort-btn active" data-sort="editorial">Editorial</button>
+    <span class="sort-sep">·</span>
+    <button class="sort-btn" data-sort="year">Year ↓</button>
+    <span class="sort-sep">·</span>
+    <button class="sort-btn" data-sort="domain">Domain</button>
+  </div>
+</div>
+
+<!-- WORKS LIST -->
+<main id="works-list">
+  <!-- JS-rendered -->
+</main>
+
+<div id="empty-state">
+  <p>No projects match that search.</p>
+</div>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <span class="footer-logo">Papazian</span>
+  <span class="footer-tagline">Creative Systems Architect · New York · © 2026</span>
+</footer>
+
+
+<script>
+const rowPreview = document.getElementById('row-preview');
+const previewCanvas = document.getElementById('preview-canvas');
+const previewImg = document.getElementById('preview-img');
+const previewLabel = document.getElementById('preview-label');
+let currentPreviewSrc = null;
+
+
+/* ── STATE ─────────────────────────────────────────────────────── */
+let activeFilter = 'all';
+let activeSort = 'editorial';
+let searchQuery = '';
+
+/* ── CURSOR ────────────────────────────────────────────────────── */
+const cursor = document.getElementById('cursor');
+let mouseX = 0, mouseY = 0, curX = 0, curY = 0;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+(function trackCursor() {
+  curX += (mouseX - curX) * 0.15; curY += (mouseY - curY) * 0.15;
+  cursor.style.transform = `translate(-50%,-50%) translate(${curX}px, ${curY}px)`;
+  requestAnimationFrame(trackCursor);
+})();
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+/* ── LENIS ─────────────────────────────────────────────────────── */
+const lenis = new Lenis({ duration: 1.2, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+lenis.on('scroll', ScrollTrigger.update);
+
+/* ── MOBILE MENU ───────────────────────────────────────────────── */
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('mobile-menu').classList.add('open');
+  document.body.classList.add('no-scroll');
+});
+document.getElementById('mobile-close')?.addEventListener('click', () => {
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.body.classList.remove('no-scroll');
+});
+
+/* ── PAGE TRANSITION ────────────────────────────────────────────── */
+function doPageTransition(href) {
+  if (!href || href.startsWith('#') || href.startsWith('mailto:')) return;
+  const bar = document.getElementById('page-transition');
+  gsap.set(bar, { yPercent: 100 });
+  const tl = gsap.timeline({ onComplete: () => { window.location.href = href; }});
+  tl.to(bar, { yPercent: 0, duration: 0.6, ease: 'expo.inOut' })
+    .to(bar, { css: { '::after': { yPercent: 0 }}, duration: 0.6, ease: 'expo.inOut' }, "-=0.4");
+}
+document.querySelectorAll('a[href]').forEach(a => {
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('mailto:')) return;
+  a.addEventListener('click', e => { e.preventDefault(); doPageTransition(href); });
+});
+
+/* ── FILTER / SORT / SEARCH LOGIC ──────────────────────────────── */
+function getFilteredProjects() {
+  let list = [...PROJECTS];
+
+  // domain filter
+  if (activeFilter !== 'all') {
+    list = list.filter(p => p.domains.includes(activeFilter));
+  }
+
+  // search
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.domains.join(' ').includes(q) ||
+      p.year.includes(q) ||
+      (p.desc && p.desc.toLowerCase().includes(q))
+    );
+  }
+
+  // sort
+  if (activeSort === 'year') {
+    list.sort((a, b) => {
+      const ya = parseInt(b.year) || 2025;
+      const yb = parseInt(a.year) || 2025;
+      return ya - yb;
+    });
+  } else if (activeSort === 'domain') {
+    list.sort((a, b) => a.domains[0].localeCompare(b.domains[0]));
+  }
+  // 'editorial' = default order
+
+  return list;
+}
+
+/* ── RENDER ─────────────────────────────────────────────────────── */
+function render() {
+  const list = getFilteredProjects();
+  const container = document.getElementById('works-list');
+  const empty = document.getElementById('empty-state');
+  const countEl = document.getElementById('result-count');
+  const headerCount = document.getElementById('header-count');
+
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    empty.style.display = 'block';
+    countEl.textContent = '0 Projects';
+    return;
+  }
+  empty.style.display = 'none';
+  countEl.textContent = `${list.length} Project${list.length !== 1 ? 's' : ''}`;
+  if (headerCount) headerCount.textContent = `${list.length} projects`;
+
+  // Group by domain if sorting by domain
+  if (activeSort === 'domain' && activeFilter === 'all' && !searchQuery) {
+    const groups = {};
+    list.forEach(p => {
+      const d = p.domains[0];
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(p);
+    });
+    Object.entries(groups).forEach(([domain, projects]) => {
+      const header = document.createElement('div');
+      header.className = 'domain-header';
+      header.innerHTML = `
+        <span class="domain-header-label" style="color:${DOMAIN_COLORS[domain]}">${DOMAIN_LABELS[domain]}</span>
+        <span class="domain-header-count">${projects.length} works</span>`;
+      container.appendChild(header);
+      projects.forEach((p, i) => container.appendChild(makeRow(p, i)));
+    });
+  } else {
+    list.forEach((p, i) => container.appendChild(makeRow(p, i)));
+  }
+
+  // Re-bind cursor hover
+  document.querySelectorAll('a.work-row, .work-row').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+  });
+
+  // Stagger reveal
+  requestAnimationFrame(() => {
+    const rows = container.querySelectorAll('.work-row');
+    rows.forEach((row, i) => {
+      setTimeout(() => row.classList.add('revealed'), i * 28);
+    });
+  });
+
+  bindPreviewHover();
+
+  // ── IntersectionObserver Preloading ──────────────────────────
+  const preloadObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const row = entry.target;
+        const imgUrl = row.dataset.img;
+        const fallback = row.dataset.imgFallback;
+        if (imgUrl) {
+          const img = new Image();
+          img.src = imgUrl;
+          img.onerror = () => { if (fallback) img.src = fallback; };
+        }
+        observer.unobserve(row);
+      }
+    });
+  }, { rootMargin: '400px 0px' });
+  
+  document.querySelectorAll('.work-row[data-img]').forEach(row => {
+    preloadObserver.observe(row);
+  });
+}
+
+function makeRow(p, i) {
+  const a = document.createElement('a');
+  a.className = 'work-row';
+  a.href = `projects/${p.id}.html`;
+  // Local image first, Unsplash fallback
+  a.dataset.img = `images/projects/${p.id}.jpg`;
+  a.dataset.imgFallback = p.img || '';
+  a.dataset.color = p.color || '#0c0b0a';
+  a.dataset.title = p.title;
+  a.dataset.domain = p.domains[0];
+
+  const dotsHtml = p.domains.slice(0, 3).map(d =>
+    `<span class="domain-dot ${d}" style="background:${DOMAIN_COLORS[d]}" title="${DOMAIN_LABELS[d]}"></span>`
+  ).join('');
+
+  const statusBadge = p.tier === 1 ? `<span style="font-family:var(--sans);font-size:.44rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);padding:.1rem .35rem;margin-left:.5rem;">Featured</span>` : '';
+
+  a.innerHTML = `
+    <div class="work-row-left">
+      <span class="work-title">${p.title}${statusBadge}</span>
+      <span class="work-domains">${p.domains.map(d => DOMAIN_LABELS[d]).join(' · ')}</span>
+    </div>
+    <div class="work-row-mid">${dotsHtml}</div>
+    <div class="work-row-right">
+      <span class="work-meta">${p.year}</span>
+      <span class="work-arrow">→</span>
+    </div>`;
+  return a;
+}
+
+
+function drawPixelPlaceholder(canvas, bgColor) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = 280; canvas.height = 190;
+  ctx.fillStyle = bgColor || '#0c0b0a';
+  ctx.fillRect(0, 0, 280, 190);
+  const cols = 18, rows = 12;
+  const cw = 280 / cols, ch = 190 / rows;
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const v = 10 + ((c * 7 + r * 11) % 22);
+      ctx.fillStyle = `rgb(${v+4},${Math.round(v*.9)},${Math.round(v*.78)})`;
+      ctx.fillRect(c * cw, r * ch, cw + 1, ch + 1);
+    }
+  }
+}
+
+function bindPreviewHover() {
+  document.querySelectorAll('.work-row[data-img]').forEach(row => {
+    row.addEventListener('mouseenter', () => {
+      const imgUrl = row.dataset.img;
+      const bgColor = row.dataset.color;
+      const title = row.dataset.title;
+      const domain = row.dataset.domain;
+
+      rowPreview.classList.add('visible');
+      previewLabel.textContent = DOMAIN_LABELS[domain] || '';
+      previewLabel.style.color = DOMAIN_COLORS[domain] || 'var(--gold)';
+      cursor.style.borderColor = DOMAIN_COLORS[domain] || 'var(--gold)';
+      gsap.fromTo(rowPreview, { scale: 0.85 }, { scale: 1, duration: 0.5, ease: 'back.out(1.5)', overwrite: 'auto' });
+
+      if (imgUrl !== currentPreviewSrc) {
+        currentPreviewSrc = imgUrl;
+        previewImg.style.opacity = '0';
+        gsap.set(previewCanvas, { opacity: 1 });
+        drawPixelPlaceholder(previewCanvas, bgColor);
+
+        const fallback = row.dataset.imgFallback || '';
+        const full = new Image();
+        full.src = imgUrl;
+        full.onerror = () => {
+          if (fallback) { full.src = fallback; } // retry with Unsplash
+        };
+        full.onload = () => {
+          previewImg.src = full.src;
+          previewImg.onload = () => {
+            previewImg.style.opacity = '1';
+            gsap.to(previewCanvas, { opacity: 0, duration: .55, ease: 'power2.out' });
+          };
+        };
+      }
+    });
+
+    row.addEventListener('mousemove', e => {
+      gsap.to(rowPreview, { x: e.clientX + 20, y: e.clientY - 95, duration: .1, ease: 'power2.out' });
+    });
+
+    row.addEventListener('mouseleave', () => {
+      rowPreview.classList.remove('visible');
+      currentPreviewSrc = null;
+      cursor.style.borderColor = 'var(--gold)';
+      gsap.to(rowPreview, { scale: 0.9, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
+    });
+  });
+}
+
+/* ── FILTER BUTTONS ─────────────────────────────────────────────── */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeFilter = btn.dataset.filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  });
+});
+
+/* ── SORT BUTTONS ───────────────────────────────────────────────── */
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeSort = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  });
+});
+
+/* ── SEARCH ─────────────────────────────────────────────────────── */
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchQuery = e.target.value;
+    render();
+  }, 120);
+});
+
+/* ── PAGE HEADER ENTRANCE ───────────────────────────────────────── */
+gsap.from('#page-header', { opacity: 0, y: 24, duration: .9, ease: 'power3.out', delay: .1 });
+
+/* ── INIT ───────────────────────────────────────────────────────── */
+function init() {
+  if (typeof PROJECTS === 'undefined' || !PROJECTS || PROJECTS.length === 0) {
+    console.warn('WORKS: data.js not ready, retrying...');
+    setTimeout(init, 50);
+    return;
+  }
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+/* ── PRELOAD HOVER IMAGES ───────────────────────────────────────── */
+window.addEventListener('load', () => {
+  const preloadImages = () => {
+    const rows = Array.from(document.querySelectorAll('.work-row[data-img]'));
+    rows.slice(0, 10).forEach(row => {
+      const img = new Image();
+      img.src = row.dataset.img;
+    });
+    const loadRemaining = () => {
+      rows.slice(10).forEach(row => {
+        const img = new Image();
+        img.src = row.dataset.img;
+      });
+    };
+    if (window.requestIdleCallback) {
+      requestIdleCallback(loadRemaining);
+    } else {
+      setTimeout(loadRemaining, 2000);
+    }
+  };
+  // Wait a moment after load
+  setTimeout(preloadImages, 800);
+});
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
