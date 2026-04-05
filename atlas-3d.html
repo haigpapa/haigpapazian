@@ -88,9 +88,8 @@ a{color:inherit;text-decoration:none}
   opacity:0;pointer-events:none;transition:opacity .5s;
 }
 #top-nav.vis{opacity:1;pointer-events:all}
-.nav-home{font-family:var(--serif);font-size:.9rem;font-weight:400;letter-spacing:.06em;color:var(--ink-2);transition:color .2s;display:flex;align-items:center;gap:.4rem}
+.nav-home{font-family:var(--serif);font-size:.95rem;font-weight:400;letter-spacing:.06em;color:var(--ink);transition:color .2s;text-decoration:none}
 .nav-home:hover{color:var(--gold-lt)}
-.nav-home .arr{font-family:var(--sans);font-size:.75rem}
 .domain-filters{display:flex;gap:.6rem;align-items:center}
 .df-btn{
   font-family:var(--sans);font-size:.5rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
@@ -255,7 +254,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- NAV -->
 <nav id="top-nav">
-  <a href="index.html" class="nav-home"><span class="arr">←</span> Papazian</a>
+  <a href="index.html" class="nav-home">Haig Papazian</a>
   <div class="domain-filters">
     <button class="df-btn active" data-domain="all">All</button>
     <button class="df-btn" data-domain="sound">Sound</button>
@@ -405,7 +404,7 @@ const rt = new THREE.WebGLRenderTarget(innerWidth,innerHeight,{
 const postScene = new THREE.Scene();
 const postCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const postMat = new THREE.ShaderMaterial({
-  uniforms:{uScene:{value:rt.texture},uTime:{value:0},uCA:{value:.0025},uGrain:{value:.016},uDoF:{value:0}},
+  uniforms:{uScene:{value:rt.texture},uTime:{value:0},uCA:{value:0},uGrain:{value:.016},uDoF:{value:0}},
   vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
   fragmentShader:`
     uniform sampler2D uScene;uniform float uTime,uCA,uGrain,uDoF;
@@ -612,7 +611,7 @@ function buildBaseEdges(filterDomain){
     if(!so||!to) return;
     const active = filterDomain==='all'||
       (l.source.domains.includes(filterDomain)&&l.target.domains.includes(filterDomain));
-    const alpha=active?.09:.015;
+    const alpha=active?.22:.055;
     const c=new THREE.Color(0xffffff);
     // Edge points: terminate at rectangular boundary, not center
     const sp = edgePoint(so, to.mesh.position);
@@ -626,7 +625,7 @@ function buildBaseEdges(filterDomain){
   return g;
 }
 
-const baseMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+const baseMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,linewidth:3});
 // Start with empty geometry — rebuilt after first render when camera matrix is valid
 let baseEdges=new THREE.LineSegments(new THREE.BufferGeometry(),baseMat);
 scene.add(baseEdges);
@@ -767,9 +766,7 @@ function flyTo(obj){
     onComplete: () => { camMode = 'focus'; }
   });
 
-  // CA aberration spike
-  gsap.killTweensOf(postMat.uniforms.uCA);
-  gsap.to(postMat.uniforms.uCA,{value:.014,duration:.12,yoyo:true,repeat:1,onComplete:()=>{postMat.uniforms.uCA.value=.0025;}});
+  // CA aberration removed
 }
 
 function easeInOutCubic(t){
@@ -1170,9 +1167,7 @@ function startAtlas(){
     ease: "power3.inOut"
   });
 
-  // Fade through a dramatic bloom/aberration sequence
-  gsap.to(postMat.uniforms.uCA, { value: 0.02, duration: 2, ease: "power2.out" });
-  gsap.to(postMat.uniforms.uCA, { value: 0.0025, duration: 3, delay: 2, ease: "power2.inOut" });
+  // CA aberration removed
 
   const tl = gsap.timeline();
   tl.to(cam, {
