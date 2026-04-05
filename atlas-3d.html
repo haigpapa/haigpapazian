@@ -489,26 +489,22 @@ const BILLBOARD_FRAG=`
   varying vec2 vUv;
   void main(){
     vec2 uv=vUv;
-    // Crisp square mask — no rounding
-    float rx=0.0,ry=0.0;
+    // Crisp square mask
     vec2 c=uv*2.0-1.0;
     vec2 d=abs(c)-vec2(1.0,1.0);
-    float dist=length(max(d,0.0))-0.0;
+    float dist=length(max(d,0.0));
     float mask=1.0-smoothstep(-.015,.015,dist);
+    // Full natural image color — no vignette, no tint
     vec4 tex=texture2D(uTex,uv);
-    // Edge darkening
-    float vg=1.0-smoothstep(.55,.98,length(uv-.5)*1.15);
-    vec3 col=tex.rgb*vg;
-    // Always-on persistent domain border — low alpha, architectural feel
-    float borderMask = 1.0 - smoothstep(-0.005, 0.005, abs(dist));
-    col = mix(col, uColor * 1.2, borderMask * 0.32);
-    // Hover rim — brighter layer on top of persistent border
-    float rimD=abs(dist+.032);
-    float rim=smoothstep(.045,0.0,rimD)*uHov;
-    col=mix(col,uColor*1.8,rim);
-    // Subtle domain tint
-    col=mix(col,uColor,.06);
-    // Dimming for non-active domain
+    vec3 col=tex.rgb;
+    // Always-on border: thin crisp line around every node
+    float borderMask=1.0-smoothstep(0.0,0.018,abs(dist));
+    col=mix(col,uColor*1.4,borderMask*0.55);
+    // Hover rim — bright domain-color glow matching connection lines
+    float rimD=abs(dist+.028);
+    float rim=smoothstep(.06,0.0,rimD)*uHov;
+    col=mix(col,uColor*2.4,rim);
+    // Dimming for non-active domain filter
     col=mix(col,vec3(.04,.04,.06),uDimmed*.85);
     gl_FragColor=vec4(col,mask*uOpacity);
   }
