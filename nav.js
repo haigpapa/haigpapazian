@@ -52,7 +52,7 @@
 
   const navHTML = `
 <nav id="nav"${navClass}>
-  <a href="${prefix}index.html" class="nav-logo">Haig Papazian</a>
+  <a href="${prefix}index.html" class="nav-logo">PAPAZIAN</a>
   <ul class="nav-links">
       ${desktopLinks}
   </ul>
